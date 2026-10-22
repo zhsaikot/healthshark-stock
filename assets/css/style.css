@@ -126,6 +126,29 @@ html[lang="bn"] .font-heading {
   width: 5rem; /* 80px */
 }
 
+/* Make logo large, sharp and centered when collapsed */
+#app-sidebar.collapsed .sidebar-header {
+  justify-content: center !important;
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+}
+
+#app-sidebar.collapsed .sidebar-brand-box {
+  justify-content: center !important;
+}
+
+#app-sidebar.collapsed .sidebar-logo {
+  height: 3.25rem !important; /* 52px large & clear */
+  width: 3.25rem !important;
+  margin: 0 auto !important;
+}
+
+#app-sidebar.collapsed #sidebar-toggle-btn {
+  justify-content: center !important;
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+}
+
 #app-sidebar.collapsed .sidebar-label {
   display: none !important;
 }

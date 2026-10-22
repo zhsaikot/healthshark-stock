@@ -115,6 +115,14 @@ class HealthSharkApp {
     if (backdrop) {
       backdrop.addEventListener("click", () => this.toggleMobileSidebar(false));
     }
+
+    // Keyboard shortcut (Alt + S or Ctrl + B)
+    window.addEventListener("keydown", (e) => {
+      if ((e.altKey && e.key.toLowerCase() === "s") || (e.ctrlKey && e.key.toLowerCase() === "b")) {
+        e.preventDefault();
+        this.toggleSidebar();
+      }
+    });
   }
 
   toggleSidebar() {

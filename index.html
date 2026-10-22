@@ -58,9 +58,9 @@
     class="fixed lg:sticky top-0 inset-y-0 left-0 z-50 h-screen w-64 shrink-0 bg-white dark:bg-[#0c160f] border-r border-gray-200/80 dark:border-slate-800 flex flex-col shadow-xl lg:shadow-none -translate-x-full lg:translate-x-0 transition-all duration-300 ease-in-out select-none"
   >
     <!-- Brand / Header of Sidebar -->
-    <div class="h-20 sm:h-24 px-4 flex items-center justify-between border-b border-gray-100 dark:border-slate-800/80">
-      <div class="flex items-center gap-3 overflow-hidden">
-        <img src="assets/images/logo.png" alt="Health Shark Logo" class="h-11 w-11 shrink-0 object-contain" />
+    <div class="sidebar-header h-20 sm:h-24 px-4 flex items-center justify-between border-b border-gray-100 dark:border-slate-800/80">
+      <div class="sidebar-brand-box flex items-center gap-3 overflow-hidden w-full">
+        <img src="assets/images/logo.png" alt="Health Shark Logo" class="sidebar-logo h-12 w-12 shrink-0 object-contain transition-all" />
         <div class="sidebar-label transition-opacity duration-200 min-w-0">
           <h1 class="font-heading font-extrabold text-xl text-brand-900 dark:text-brand-300 tracking-tight leading-tight truncate" data-i18n="brandName">
             Health Shark
@@ -70,20 +70,11 @@
           </p>
         </div>
       </div>
-      <!-- Desktop Collapse Button -->
-      <button 
-        id="sidebar-toggle-btn"
-        type="button" 
-        title="Toggle Sidebar"
-        class="hidden lg:flex w-9 h-9 rounded-xl items-center justify-center text-gray-500 hover:text-brand-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-slate-800 transition-colors shrink-0"
-      >
-        <i id="sidebar-toggle-icon" class="fa-solid fa-angles-left text-sm transition-transform duration-300"></i>
-      </button>
       <!-- Mobile Close Button -->
       <button 
         id="sidebar-close-mobile"
         type="button"
-        class="lg:hidden w-9 h-9 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-slate-800"
+        class="lg:hidden w-9 h-9 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-slate-800 shrink-0"
       >
         <i class="fa-solid fa-xmark text-lg"></i>
       </button>
@@ -170,8 +161,23 @@
       </button>
     </div>
 
-    <!-- Sidebar Bottom / Live Status Card -->
-    <div class="p-3 border-t border-gray-100 dark:border-slate-800/80">
+    <!-- Sidebar Bottom / Live Status & Collapse Toggle -->
+    <div class="p-3 border-t border-gray-100 dark:border-slate-800/80 space-y-2">
+      <!-- Desktop Collapse Button at Bottom -->
+      <button 
+        id="sidebar-toggle-btn"
+        type="button" 
+        title="Toggle Sidebar"
+        class="hidden lg:flex w-full items-center justify-between px-3.5 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 font-bold text-xs transition-colors"
+      >
+        <span class="sidebar-label flex items-center gap-2">
+          <i id="sidebar-toggle-icon" class="fa-solid fa-angles-left text-brand-600 dark:text-brand-400"></i>
+          <span>Collapse Sidebar</span>
+        </span>
+        <span class="sidebar-label text-[10px] text-gray-400 dark:text-gray-500 uppercase font-extrabold tracking-wider">Alt+S</span>
+        <i class="sidebar-collapsed-only fa-solid fa-angles-right text-base text-brand-600 dark:text-brand-400 mx-auto"></i>
+      </button>
+
       <div class="sidebar-label bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 rounded-2xl p-3 text-xs">
         <div class="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-extrabold">
           <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -179,7 +185,7 @@
         </div>
         <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">Mirpur Kitchen, Dhaka</p>
       </div>
-      <div class="sidebar-collapsed-only justify-center py-2 text-emerald-600 dark:text-emerald-400">
+      <div class="sidebar-collapsed-only justify-center py-1 text-emerald-600 dark:text-emerald-400">
         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" title="System Online"></span>
       </div>
     </div>
