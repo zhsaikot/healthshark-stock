@@ -1033,6 +1033,52 @@ class HealthSharkApp {
     this.openModal("modal-import");
   }
 
+  // --- EXPORT REPORT MODAL ---
+  openExportModal(defaultType = "stock", defaultFormat = "pdf") {
+    const typeSelect = document.getElementById("export-report-type");
+    const formatSelect = document.getElementById("export-format");
+    const periodSelect = document.getElementById("export-period");
+    const monthSelect = document.getElementById("export-month");
+    const yearSelect = document.getElementById("export-year");
+
+    if (typeSelect) typeSelect.value = defaultType;
+    if (formatSelect) formatSelect.value = defaultFormat;
+    if (periodSelect) {
+      // Default to "today" if stock is selected, otherwise "month"
+      periodSelect.value = defaultType === "stock" ? "today" : "month";
+    }
+    if (monthSelect) monthSelect.value = String(window.hsStore.selectedMonthFilter || window.hsStore.currentMonth);
+    if (yearSelect) yearSelect.value = String(window.hsStore.selectedYearFilter || window.hsStore.currentYear);
+
+    this.updateExportPeriodVisibility();
+    this.openModal("modal-export-report");
+  }
+
+  updateExportPeriodVisibility() {
+    const periodSelect = document.getElementById("export-period");
+    const monthRow = document.getElementById("export-month-row");
+    if (!periodSelect || !monthRow) return;
+
+    if (periodSelect.value === "month") {
+      monthRow.classList.remove("hidden");
+    } else {
+      monthRow.classList.add("hidden");
+    }
+  }
+
+  handleExportSubmit(e) {
+    e.preventDefault();
+    const type = document.getElementById("export-report-type").value;
+    const format = document.getElementById("export-format").value;
+    const period = document.getElementById("export-period").value;
+    const month = document.getElementById("export-month").value;
+    const year = document.getElementById("export-year").value;
+
+    window.hsReports.dispatchExport(type, format, period, month, year);
+    this.closeModal("modal-export-report");
+    this.showToast(format === "pdf" ? "PDF Report downloaded successfully!" : "CSV spreadsheet exported successfully!");
+  }
+
   handleImportFile() {
     const fileInput = document.getElementById("import-file-input");
     if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
@@ -1195,6 +1241,13 @@ class HealthSharkApp {
 
     if (saleFoodSelect) saleFoodSelect.addEventListener("change", updateSaleTotals);
     if (saleQtyInput) saleQtyInput.addEventListener("input", updateSaleTotals);
+
+    // Export Report Form Event Listeners
+    const exportForm = document.getElementById("export-report-form");
+    if (exportForm) exportForm.addEventListener("submit", (e) => this.handleExportSubmit(e));
+
+    const exportPeriod = document.getElementById("export-period");
+    if (exportPeriod) exportPeriod.addEventListener("change", () => this.updateExportPeriodVisibility());
   }
 }
 

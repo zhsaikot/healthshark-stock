@@ -1,6 +1,7 @@
 /**
  * Health Shark Stock & Management System
- * Reports Engine: PDF, CSV, and JSON Export / Import
+ * Enhanced Reports Engine: PDF, CSV, and JSON Export / Import
+ * With complete Unicode text sanitization and multi-category report generator
  */
 
 class ReportsEngine {
@@ -24,34 +25,77 @@ class ReportsEngine {
     }
   }
 
-  // --- PDF REPORT FOR BUSINESS OWNER ---
-  async generateMonthlyPDF(monthIndex, year) {
-    if (!window.jspdf || !window.jspdf.jsPDF) {
-      alert("PDF library is loading. Please try again in a few seconds.");
-      return;
+  /**
+   * Clean text for jsPDF standard Helvetica font
+   * Strips Bengali / non-Latin-1 characters to completely prevent encoding corruption / Mojibake
+   */
+  cleanPdfText(str) {
+    if (!str) return "";
+    let text = String(str);
+
+    // 1. If string contains parentheses with Bengali like "Chinigura Polao Rice (পোলাও চাল)", extract English part
+    if (text.includes("(") && text.includes(")")) {
+      const cleaned = text.replace(/\([^)]*[\u0980-\u09FF][^)]*\)/g, "").trim();
+      if (cleaned.length > 0) {
+        text = cleaned;
+      }
     }
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4"
-    });
+    // 2. Map known categories and payment methods
+    const categoryMap = {
+      catRaw: "Raw Ingredients",
+      catMeals: "Pre-Order Meals & Combos",
+      catBurgers: "Burgers & Sandwiches",
+      catSnacks: "Snacks & Bites",
+      catDesserts: "Baked Goods & Desserts",
+      catPackaging: "Packaging & Boxes",
+      catBeverage: "Beverages",
+      expRawBazaar: "Raw Material & Bazaar",
+      expUtility: "Utilities (Gas/Electric/Water)",
+      expRent: "Kitchen & Shop Rent",
+      expPackaging: "Packaging & Printing",
+      expDelivery: "Delivery & Transport",
+      expPayroll: "Staff Salaries & Food",
+      expEquipment: "Kitchen Equipment & Repairs",
+      expMisc: "Miscellaneous",
+      payCash: "Cash",
+      payBkash: "bKash",
+      payNagad: "Nagad",
+      payBank: "Bank Transfer",
+      unitKg: "kg",
+      unitGm: "gm",
+      unitLitre: "Litre",
+      unitPcs: "pcs",
+      unitPacket: "packet",
+      unitBox: "box",
+      statusActive: "Active",
+      statusLeave: "On Leave",
+      statusResigned: "Resigned"
+    };
 
-    const isBengali = window.hsI18n.getLang() === "bn";
-    const monthName = monthIndex === "all" ? (isBengali ? "সকল মাস" : "All Months") : window.hsI18n.getMonthName(Number(monthIndex));
-    const reportTitle = `Monthly Business & Stock Report — ${monthName} ${year}`;
-    const dateStr = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    if (categoryMap[text]) {
+      return categoryMap[text];
+    }
 
-    // Financial calculations
-    const fin = window.hsStore.getFinancialMetrics(monthIndex, year);
-    const stock = window.hsStore.getStockMetrics();
+    // 3. Replace currency symbol ৳ with Tk.
+    text = text.replace(/৳/g, "Tk. ");
 
-    // 1. Header Banner
-    doc.setFillColor(20, 83, 45); // Health Shark Brand Dark Green (#14532d)
+    // 4. Remove any remaining Bengali Unicode characters (\u0980-\u09FF)
+    text = text.replace(/[\u0980-\u09FF]+/g, "").trim();
+
+    // 5. Clean up extra spaces or orphaned punctuation
+    text = text.replace(/\s+/g, " ").replace(/\(\s*\)/g, "").trim();
+
+    return text || "Item";
+  }
+
+  // --- BRANDED PDF HEADER HELPER ---
+  renderPdfHeader(doc, title, subtitle, dateString) {
+    // Top Brand Green Banner (#14532d)
+    doc.setFillColor(20, 83, 45);
     doc.rect(0, 0, 210, 36, "F");
 
-    // Try embedding logo
+    // Add Logo if available
     if (this.logoBase64) {
       try {
         doc.addImage(this.logoBase64, "PNG", 14, 6, 24, 24);
@@ -64,66 +108,456 @@ class ReportsEngine {
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(20);
-    doc.text("HEALTH SHARK", 44, 16);
+    doc.text("HEALTH SHARK", 44, 15);
 
-    doc.setFontSize(10);
+    doc.setFontSize(9.5);
     doc.setFont("helvetica", "normal");
-    doc.text("Healthy Food Store & Kitchen | Dhaka, Bangladesh", 44, 22);
-    doc.text("Mirpur Area | Hotline: 01789-474381 | Web: zhsaikot.github.io/healthshark", 44, 28);
+    doc.text("Healthy Food Store & Kitchen | Dhaka, Bangladesh", 44, 21);
+    doc.text("Mirpur Area | Hotline: 01789-474381 | Web: zhsaikot.github.io/healthshark", 44, 26);
 
-    doc.setFontSize(9);
-    doc.text(`Generated: ${dateStr}`, 155, 28);
+    doc.setFontSize(8.5);
+    doc.text(`Generated: ${dateString}`, 150, 26);
 
-    // 2. Executive Report Subheader
-    doc.setTextColor(30, 41, 59);
+    // Subheader section
+    doc.setTextColor(20, 83, 45);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.text(reportTitle.toUpperCase(), 14, 46);
+    doc.setFontSize(13);
+    doc.text(title.toUpperCase(), 14, 46);
 
-    // 3. KPI Cards / Summary Blocks (4 Column Grid)
-    const cardY = 52;
-    const cardWidth = 43;
-    const cardHeight = 22;
+    if (subtitle) {
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100, 116, 139);
+      doc.text(subtitle, 14, 51);
+    }
+  }
 
+  // --- PDF FOOTER HELPER ---
+  renderPdfFooter(doc) {
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(148, 163, 184);
+      doc.text(`Health Shark System | Confidential Owner Statement | Page ${i} of ${pageCount}`, 14, 290);
+      doc.text("Owner Signature: _______________________", 140, 290);
+    }
+  }
+
+  // =========================================================================
+  // 1. STOCK & INVENTORY REPORT (TODAY'S AS-OF-DATE LIVE REPORT)
+  // =========================================================================
+  exportStockReport(format = "pdf") {
+    const items = window.hsStore.getItems();
+    const metrics = window.hsStore.getStockMetrics();
+    const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+
+    if (format === "csv") {
+      this.exportStockCSV();
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+    this.renderPdfHeader(
+      doc,
+      "Current Stock & Inventory Valuation Report",
+      `Live Inventory Position as of Today (${today}) — Official Report for Owner`,
+      today
+    );
+
+    // KPI Summary Box
+    const cardY = 56;
     const cards = [
-      { title: "Monthly Sales", value: `Tk. ${fin.totalIncome.toLocaleString()}`, color: [22, 163, 74] },
-      { title: "Monthly Expenses", value: `Tk. ${fin.totalExpenses.toLocaleString()}`, color: [220, 38, 38] },
-      { title: "Net Profit", value: `Tk. ${fin.netProfit.toLocaleString()}`, color: fin.netProfit >= 0 ? [21, 128, 61] : [220, 38, 38] },
-      { title: "Stock Valuation", value: `Tk. ${stock.totalValue.toLocaleString()}`, color: [15, 118, 110] }
+      { title: "Total Stock Value", value: `Tk. ${metrics.totalValue.toLocaleString()}`, color: [20, 83, 45] },
+      { title: "Total Items", value: `${metrics.totalItems} Items`, color: [30, 41, 59] },
+      { title: "Low Stock Items", value: `${metrics.lowStockCount} Items`, color: [217, 119, 6] },
+      { title: "Out of Stock", value: `${metrics.outOfStockCount} Items`, color: [220, 38, 38] }
     ];
 
     cards.forEach((c, idx) => {
-      const x = 14 + idx * (cardWidth + 2.5);
+      const x = 14 + idx * 46;
       doc.setFillColor(248, 250, 252);
       doc.setDrawColor(226, 232, 240);
-      doc.roundedRect(x, cardY, cardWidth, cardHeight, 2, 2, "FD");
+      doc.roundedRect(x, cardY, 43, 20, 2, 2, "FD");
 
-      doc.setFontSize(8);
+      doc.setFontSize(7.5);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(100, 116, 139);
+      doc.text(c.title.toUpperCase(), x + 4, cardY + 6);
+
+      doc.setFontSize(11);
+      doc.setTextColor(c.color[0], c.color[1], c.color[2]);
+      doc.text(c.value, x + 4, cardY + 15);
+    });
+
+    let currentY = cardY + 28;
+
+    // Urgent Low Stock Warning Table (if any)
+    if (metrics.urgentItems.length > 0) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10.5);
+      doc.setTextColor(185, 28, 28);
+      doc.text(`ATTENTION: LOW STOCK ITEMS NEEDING RESTOCK (${metrics.urgentItems.length})`, 14, currentY);
+
+      const alertRows = metrics.urgentItems.map((item) => [
+        this.cleanPdfText(item.name),
+        this.cleanPdfText(item.category),
+        `${item.quantity} ${this.cleanPdfText(item.unit)}`,
+        `${item.threshold} ${this.cleanPdfText(item.unit)}`,
+        `Tk. ${Number(item.costPrice).toLocaleString()}`,
+        item.quantity === 0 ? "OUT OF STOCK" : "LOW STOCK"
+      ]);
+
+      doc.autoTable({
+        startY: currentY + 3,
+        head: [["Item Name", "Category", "Current Qty", "Min Threshold", "Unit Cost", "Status"]],
+        body: alertRows,
+        theme: "grid",
+        styles: { fontSize: 8, cellPadding: 2.5, font: "helvetica" },
+        headStyles: { fillColor: [185, 28, 28], textColor: 255 },
+        margin: { left: 14, right: 14 }
+      });
+
+      currentY = doc.lastAutoTable.finalY + 9;
+    }
+
+    // Complete Inventory Ledger Table
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10.5);
+    doc.setTextColor(30, 41, 59);
+    doc.text(`COMPLETE INVENTORY LEDGER (${items.length} Items)`, 14, currentY);
+
+    const stockRows = items.map((item) => {
+      const totalVal = (Number(item.quantity) || 0) * (Number(item.costPrice) || 0);
+      let status = "IN STOCK";
+      if (item.quantity === 0) status = "OUT";
+      else if (item.quantity <= item.threshold) status = "LOW";
+
+      return [
+        this.cleanPdfText(item.name),
+        this.cleanPdfText(item.category),
+        `${item.quantity} ${this.cleanPdfText(item.unit)}`,
+        `Tk. ${Number(item.costPrice).toLocaleString()}`,
+        item.sellingPrice ? `Tk. ${Number(item.sellingPrice).toLocaleString()}` : "-",
+        `Tk. ${totalVal.toLocaleString()}`,
+        status
+      ];
+    });
+
+    doc.autoTable({
+      startY: currentY + 3,
+      head: [["Item Name", "Category", "Quantity", "Unit Cost", "Sell Price", "Total Valuation", "Status"]],
+      body: stockRows,
+      theme: "striped",
+      styles: { fontSize: 8, cellPadding: 2.5, font: "helvetica" },
+      headStyles: { fillColor: [20, 83, 45], textColor: 255 },
+      margin: { left: 14, right: 14 }
+    });
+
+    this.renderPdfFooter(doc);
+    doc.save(`HealthShark_Stock_Report_${new Date().toISOString().split("T")[0]}.pdf`);
+  }
+
+  // =========================================================================
+  // 2. SALES & REVENUE REPORT
+  // =========================================================================
+  exportSalesReport(format = "pdf", monthIndex = "all", year = new Date().getFullYear()) {
+    const sales = window.hsStore.getSales(monthIndex, year);
+    const monthName = monthIndex === "all" ? "All Months" : window.hsI18n.getMonthName(Number(monthIndex));
+    const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+
+    if (format === "csv") {
+      this.exportSalesCSV(monthIndex, year);
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+    const totalIncome = sales.reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+    const totalCost = sales.reduce((sum, s) => sum + (Number(s.cost) || 0), 0);
+    const totalProfit = totalIncome - totalCost;
+
+    this.renderPdfHeader(
+      doc,
+      `Sales & Revenue Statement — ${monthName.toUpperCase()} ${year}`,
+      `Total Food Sales, Itemized Orders and Net Revenue`,
+      today
+    );
+
+    // Financial KPI Blocks
+    const cardY = 56;
+    const cards = [
+      { title: "Total Sales Revenue", value: `Tk. ${totalIncome.toLocaleString()}`, color: [22, 163, 74] },
+      { title: "Estimated Food Cost", value: `Tk. ${totalCost.toLocaleString()}`, color: [100, 116, 139] },
+      { title: "Net Sales Margin", value: `Tk. ${totalProfit.toLocaleString()}`, color: [20, 83, 45] },
+      { title: "Total Transactions", value: `${sales.length} Orders`, color: [30, 41, 59] }
+    ];
+
+    cards.forEach((c, idx) => {
+      const x = 14 + idx * 46;
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(226, 232, 240);
+      doc.roundedRect(x, cardY, 43, 20, 2, 2, "FD");
+
+      doc.setFontSize(7.5);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(100, 116, 139);
+      doc.text(c.title.toUpperCase(), x + 4, cardY + 6);
+
+      doc.setFontSize(11);
+      doc.setTextColor(c.color[0], c.color[1], c.color[2]);
+      doc.text(c.value, x + 4, cardY + 15);
+    });
+
+    const rows = sales.map((s) => [
+      s.date,
+      this.cleanPdfText(s.item),
+      s.quantity,
+      `Tk. ${Number(s.total).toLocaleString()}`,
+      s.cost ? `Tk. ${Number(s.cost).toLocaleString()}` : "-",
+      `Tk. ${(Number(s.total || 0) - Number(s.cost || 0)).toLocaleString()}`,
+      this.cleanPdfText(s.method)
+    ]);
+
+    doc.autoTable({
+      startY: cardY + 28,
+      head: [["Date", "Food Item / Order", "Qty", "Total Revenue", "Cost", "Net Gain", "Payment Method"]],
+      body: rows.length > 0 ? rows : [["-", "No sales records found for this period", "-", "Tk. 0", "-", "Tk. 0", "-"]],
+      theme: "striped",
+      styles: { fontSize: 8, cellPadding: 2.5, font: "helvetica" },
+      headStyles: { fillColor: [20, 83, 45], textColor: 255 },
+      margin: { left: 14, right: 14 }
+    });
+
+    this.renderPdfFooter(doc);
+    doc.save(`HealthShark_Sales_Report_${year}_${monthName.replace(/\s+/g, "_")}.pdf`);
+  }
+
+  // =========================================================================
+  // 3. EXPENSES & COSTING REPORT
+  // =========================================================================
+  exportExpensesReport(format = "pdf", monthIndex = "all", year = new Date().getFullYear()) {
+    const expenses = window.hsStore.getExpenses(monthIndex, year);
+    const monthName = monthIndex === "all" ? "All Months" : window.hsI18n.getMonthName(Number(monthIndex));
+    const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+
+    if (format === "csv") {
+      this.exportExpensesCSV(monthIndex, year);
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+    const totalExpenses = expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+
+    this.renderPdfHeader(
+      doc,
+      `Costing & Expense Ledger — ${monthName.toUpperCase()} ${year}`,
+      `Kitchen Bazaar, Utilities, Shop Rent, Delivery and Operations`,
+      today
+    );
+
+    // Top Expense KPI Box
+    const cardY = 56;
+    doc.setFillColor(254, 242, 242);
+    doc.setDrawColor(254, 202, 202);
+    doc.roundedRect(14, cardY, 90, 20, 2, 2, "FD");
+
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(185, 28, 28);
+    doc.text("TOTAL MONTHLY EXPENDITURE", 18, cardY + 7);
+    doc.setFontSize(13);
+    doc.text(`Tk. ${totalExpenses.toLocaleString()}`, 18, cardY + 16);
+
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(226, 232, 240);
+    doc.roundedRect(108, cardY, 88, 20, 2, 2, "FD");
+
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text("TOTAL EXPENSE ENTRIES", 112, cardY + 7);
+    doc.setFontSize(13);
+    doc.setTextColor(30, 41, 59);
+    doc.text(`${expenses.length} Records`, 112, cardY + 16);
+
+    const rows = expenses.map((e) => [
+      e.date,
+      this.cleanPdfText(e.category),
+      this.cleanPdfText(e.title),
+      this.cleanPdfText(e.vendor) || "-",
+      this.cleanPdfText(e.method),
+      `Tk. ${Number(e.amount).toLocaleString()}`
+    ]);
+
+    doc.autoTable({
+      startY: cardY + 28,
+      head: [["Date", "Category", "Description / Purpose", "Paid To", "Method", "Amount"]],
+      body: rows.length > 0 ? rows : [["-", "-", "No expenses recorded for this period", "-", "-", "Tk. 0"]],
+      theme: "striped",
+      styles: { fontSize: 8, cellPadding: 2.5, font: "helvetica" },
+      headStyles: { fillColor: [220, 38, 38], textColor: 255 },
+      margin: { left: 14, right: 14 }
+    });
+
+    this.renderPdfFooter(doc);
+    doc.save(`HealthShark_Expenses_Report_${year}_${monthName.replace(/\s+/g, "_")}.pdf`);
+  }
+
+  // =========================================================================
+  // 4. PROFIT & LOSS (P&L) FINANCIAL SUMMARY
+  // =========================================================================
+  exportProfitLossReport(format = "pdf", monthIndex = "all", year = new Date().getFullYear()) {
+    const fin = window.hsStore.getFinancialMetrics(monthIndex, year);
+    const monthName = monthIndex === "all" ? "All Months" : window.hsI18n.getMonthName(Number(monthIndex));
+    const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+
+    if (format === "csv") {
+      let csv = "Health Shark Profit & Loss Statement\n";
+      csv += `Period,${monthName} ${year}\n`;
+      csv += `Generated Date,${today}\n\n`;
+      csv += "Metric,Amount (BDT)\n";
+      csv += `Total Revenue / Sales,${fin.totalIncome}\n`;
+      csv += `Cost of Goods Sold (COGS),${fin.totalCostOfGoods}\n`;
+      csv += `Operating Expenses,${fin.totalExpenses}\n`;
+      csv += `Net Profit / Loss,${fin.netProfit}\n`;
+      csv += `Net Profit Margin %,${fin.profitMargin}%\n`;
+      this.downloadFile(csv, `HealthShark_ProfitLoss_${year}_${monthName}.csv`, "text/csv;charset=utf-8;");
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+    this.renderPdfHeader(
+      doc,
+      `Profit & Loss (P&L) Statement — ${monthName.toUpperCase()} ${year}`,
+      `Executive Financial Statement Prepared for Business Owner`,
+      today
+    );
+
+    const cardY = 56;
+    const cards = [
+      { title: "Total Revenue", value: `Tk. ${fin.totalIncome.toLocaleString()}`, color: [22, 163, 74] },
+      { title: "Total Expenses", value: `Tk. ${fin.totalExpenses.toLocaleString()}`, color: [220, 38, 38] },
+      { title: "Net Profit", value: `Tk. ${fin.netProfit.toLocaleString()}`, color: fin.netProfit >= 0 ? [20, 83, 45] : [220, 38, 38] },
+      { title: "Profit Margin", value: `${fin.profitMargin}%`, color: fin.netProfit >= 0 ? [20, 83, 45] : [220, 38, 38] }
+    ];
+
+    cards.forEach((c, idx) => {
+      const x = 14 + idx * 46;
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(226, 232, 240);
+      doc.roundedRect(x, cardY, 43, 22, 2, 2, "FD");
+
+      doc.setFontSize(7.5);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(100, 116, 139);
       doc.text(c.title.toUpperCase(), x + 4, cardY + 7);
 
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
       doc.setTextColor(c.color[0], c.color[1], c.color[2]);
       doc.text(c.value, x + 4, cardY + 16);
     });
 
-    let currentY = cardY + cardHeight + 8;
+    const pnlTable = [
+      ["Gross Food Sales & Pre-Orders", `Tk. ${fin.totalIncome.toLocaleString()}`, "100.0%"],
+      ["Less: Direct Cost of Ingredients (COGS)", `Tk. (${fin.totalCostOfGoods.toLocaleString()})`, `${fin.totalIncome > 0 ? ((fin.totalCostOfGoods / fin.totalIncome) * 100).toFixed(1) : 0}%`],
+      ["Gross Operating Margin", `Tk. ${(fin.totalIncome - fin.totalCostOfGoods).toLocaleString()}`, `${fin.totalIncome > 0 ? (((fin.totalIncome - fin.totalCostOfGoods) / fin.totalIncome) * 100).toFixed(1) : 0}%`],
+      ["Less: Kitchen Operating Expenses & Utilities", `Tk. (${fin.totalExpenses.toLocaleString()})`, `${fin.totalIncome > 0 ? ((fin.totalExpenses / fin.totalIncome) * 100).toFixed(1) : 0}%`],
+      ["NET BUSINESS PROFIT / (LOSS)", `Tk. ${fin.netProfit.toLocaleString()}`, `${fin.profitMargin}%`]
+    ];
 
-    // 4. Low Stock Alerts Section (if any)
+    doc.autoTable({
+      startY: cardY + 30,
+      head: [["Financial Account / Item", "Amount (BDT)", "% of Revenue"]],
+      body: pnlTable,
+      theme: "grid",
+      styles: { fontSize: 9.5, cellPadding: 4, font: "helvetica" },
+      headStyles: { fillColor: [20, 83, 45], textColor: 255 },
+      columnStyles: {
+        0: { fontStyle: "bold" },
+        1: { halign: "right" },
+        2: { halign: "center" }
+      },
+      margin: { left: 14, right: 14 }
+    });
+
+    this.renderPdfFooter(doc);
+    doc.save(`HealthShark_Profit_Loss_${year}_${monthName.replace(/\s+/g, "_")}.pdf`);
+  }
+
+  // =========================================================================
+  // 5. MASTER ALL-IN-ONE MONTHLY EXECUTIVE STATEMENT
+  // =========================================================================
+  exportMasterReport(format = "pdf", monthIndex = "all", year = new Date().getFullYear()) {
+    if (format === "csv") {
+      this.exportStockCSV();
+      this.exportExpensesCSV(monthIndex, year);
+      this.exportSalesCSV(monthIndex, year);
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+    const monthName = monthIndex === "all" ? "All Months" : window.hsI18n.getMonthName(Number(monthIndex));
+    const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+
+    const fin = window.hsStore.getFinancialMetrics(monthIndex, year);
+    const stock = window.hsStore.getStockMetrics();
+
+    this.renderPdfHeader(
+      doc,
+      `Comprehensive Master Report — ${monthName.toUpperCase()} ${year}`,
+      `Financial Performance, Inventory Valuation and Low Stock Status`,
+      today
+    );
+
+    // KPI Cards
+    const cardY = 56;
+    const cards = [
+      { title: "Monthly Sales", value: `Tk. ${fin.totalIncome.toLocaleString()}`, color: [22, 163, 74] },
+      { title: "Monthly Expenses", value: `Tk. ${fin.totalExpenses.toLocaleString()}`, color: [220, 38, 38] },
+      { title: "Net Profit", value: `Tk. ${fin.netProfit.toLocaleString()}`, color: fin.netProfit >= 0 ? [20, 83, 45] : [220, 38, 38] },
+      { title: "Stock Valuation", value: `Tk. ${stock.totalValue.toLocaleString()}`, color: [15, 118, 110] }
+    ];
+
+    cards.forEach((c, idx) => {
+      const x = 14 + idx * 46;
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(226, 232, 240);
+      doc.roundedRect(x, cardY, 43, 20, 2, 2, "FD");
+
+      doc.setFontSize(7.5);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(100, 116, 139);
+      doc.text(c.title.toUpperCase(), x + 4, cardY + 6);
+
+      doc.setFontSize(11);
+      doc.setTextColor(c.color[0], c.color[1], c.color[2]);
+      doc.text(c.value, x + 4, cardY + 15);
+    });
+
+    let currentY = cardY + 28;
+
+    // Low Stock Alerts Table
     if (stock.urgentItems.length > 0) {
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
+      doc.setFontSize(10.5);
       doc.setTextColor(185, 28, 28);
       doc.text(`ATTENTION: LOW STOCK ITEMS NEEDING RESTOCK (${stock.urgentItems.length})`, 14, currentY);
 
       const alertRows = stock.urgentItems.map((item) => [
-        item.name,
-        window.hsI18n.t(item.category) || item.category,
-        `${item.quantity} ${window.hsI18n.t(item.unit) || item.unit}`,
-        `${item.threshold} ${window.hsI18n.t(item.unit) || item.unit}`,
-        `Tk. ${item.costPrice}`,
+        this.cleanPdfText(item.name),
+        this.cleanPdfText(item.category),
+        `${item.quantity} ${this.cleanPdfText(item.unit)}`,
+        `${item.threshold} ${this.cleanPdfText(item.unit)}`,
+        `Tk. ${Number(item.costPrice).toLocaleString()}`,
         item.quantity === 0 ? "OUT OF STOCK" : "LOW STOCK"
       ]);
 
@@ -132,27 +566,27 @@ class ReportsEngine {
         head: [["Item Name", "Category", "Current Stock", "Min Level", "Unit Cost", "Status"]],
         body: alertRows,
         theme: "grid",
-        styles: { fontSize: 8, cellPadding: 2 },
+        styles: { fontSize: 8, cellPadding: 2.5, font: "helvetica" },
         headStyles: { fillColor: [185, 28, 28], textColor: 255 },
         margin: { left: 14, right: 14 }
       });
 
-      currentY = doc.lastAutoTable.finalY + 8;
+      currentY = doc.lastAutoTable.finalY + 9;
     }
 
-    // 5. Monthly Expenses Summary Table
+    // Expense Summary Table
     const expenses = window.hsStore.getExpenses(monthIndex, year);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
+    doc.setFontSize(10.5);
     doc.setTextColor(30, 41, 59);
     doc.text(`EXPENSE LEDGER — ${monthName.toUpperCase()} ${year} (Total: Tk. ${fin.totalExpenses.toLocaleString()})`, 14, currentY);
 
     const expenseRows = expenses.slice(0, 15).map((exp) => [
       exp.date,
-      window.hsI18n.t(exp.category) || exp.category,
-      exp.title,
-      exp.vendor || "-",
-      window.hsI18n.t(exp.method) || exp.method,
+      this.cleanPdfText(exp.category),
+      this.cleanPdfText(exp.title),
+      this.cleanPdfText(exp.vendor) || "-",
+      this.cleanPdfText(exp.method),
       `Tk. ${Number(exp.amount).toLocaleString()}`
     ]);
 
@@ -161,26 +595,26 @@ class ReportsEngine {
       head: [["Date", "Category", "Description", "Paid To", "Method", "Amount"]],
       body: expenseRows.length > 0 ? expenseRows : [["-", "-", "No expense recorded for this month", "-", "-", "Tk. 0"]],
       theme: "striped",
-      styles: { fontSize: 8, cellPadding: 2 },
+      styles: { fontSize: 8, cellPadding: 2.5, font: "helvetica" },
       headStyles: { fillColor: [20, 83, 45], textColor: 255 },
       margin: { left: 14, right: 14 }
     });
 
-    currentY = doc.lastAutoTable.finalY + 8;
+    currentY = doc.lastAutoTable.finalY + 9;
 
-    // 6. Complete Inventory Valuation Table
+    // Current Inventory Table
     const items = window.hsStore.getItems();
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
+    doc.setFontSize(10.5);
     doc.setTextColor(30, 41, 59);
-    doc.text(`CURRENT INVENTORY STATUS & VALUATION (Total Value: Tk. ${stock.totalValue.toLocaleString()})`, 14, currentY);
+    doc.text(`CURRENT INVENTORY VALUATION (Total Value: Tk. ${stock.totalValue.toLocaleString()})`, 14, currentY);
 
     const stockRows = items.map((item) => [
-      item.name,
-      window.hsI18n.t(item.category) || item.category,
-      `${item.quantity} ${window.hsI18n.t(item.unit) || item.unit}`,
-      `Tk. ${item.costPrice}`,
-      `Tk. ${(item.quantity * item.costPrice).toLocaleString()}`,
+      this.cleanPdfText(item.name),
+      this.cleanPdfText(item.category),
+      `${item.quantity} ${this.cleanPdfText(item.unit)}`,
+      `Tk. ${Number(item.costPrice).toLocaleString()}`,
+      `Tk. ${(Number(item.quantity || 0) * Number(item.costPrice || 0)).toLocaleString()}`,
       item.quantity <= item.threshold ? "LOW" : "OK"
     ]);
 
@@ -189,27 +623,51 @@ class ReportsEngine {
       head: [["Item Name", "Category", "Quantity", "Unit Cost", "Total Asset Value", "Health"]],
       body: stockRows,
       theme: "striped",
-      styles: { fontSize: 8, cellPadding: 2 },
+      styles: { fontSize: 8, cellPadding: 2.5, font: "helvetica" },
       headStyles: { fillColor: [30, 41, 59], textColor: 255 },
       margin: { left: 14, right: 14 }
     });
 
-    // 7. Footer / Signatures
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setTextColor(148, 163, 184);
-      doc.text(`Health Shark Stock System | Confidential Business Document | Page ${i} of ${pageCount}`, 14, 290);
-      doc.text("Owner Sign: ___________________", 150, 290);
-    }
-
-    // Save PDF
-    const filename = `HealthShark_Report_${year}_${monthName.replace(/\s+/g, "_")}.pdf`;
-    doc.save(filename);
+    this.renderPdfFooter(doc);
+    doc.save(`HealthShark_Master_Report_${year}_${monthName.replace(/\s+/g, "_")}.pdf`);
   }
 
-  // --- CSV EXPORT (EXCEL COMPATIBLE) ---
+  // --- DISPATCHER BASED ON MODAL SELECTION ---
+  dispatchExport(type, format, period, monthIndex, year) {
+    if (period === "today") {
+      this.exportStockReport(format);
+      return;
+    }
+
+    const m = period === "all" ? "all" : monthIndex;
+    const y = year || new Date().getFullYear();
+
+    switch (type) {
+      case "stock":
+        this.exportStockReport(format);
+        break;
+      case "sales":
+        this.exportSalesReport(format, m, y);
+        break;
+      case "expenses":
+        this.exportExpensesReport(format, m, y);
+        break;
+      case "profit":
+        this.exportProfitLossReport(format, m, y);
+        break;
+      case "master":
+      default:
+        this.exportMasterReport(format, m, y);
+        break;
+    }
+  }
+
+  // Legacy method mapped to master report
+  async generateMonthlyPDF(monthIndex, year) {
+    this.exportMasterReport("pdf", monthIndex, year);
+  }
+
+  // CSV Helpers
   exportStockCSV() {
     const items = window.hsStore.getItems();
     let csv = "Item ID,Item Name,Category,Type,Unit,Quantity,Threshold,Unit Cost (BDT),Selling Price (BDT),Total Valuation (BDT)\n";
@@ -218,10 +676,10 @@ class ReportsEngine {
       const totalVal = (Number(item.quantity) || 0) * (Number(item.costPrice) || 0);
       const row = [
         `"${item.id || ""}"`,
-        `"${(item.name || "").replace(/"/g, '""')}"`,
-        `"${window.hsI18n.t(item.category) || item.category}"`,
-        `"${window.hsI18n.t(item.type) || item.type}"`,
-        `"${window.hsI18n.t(item.unit) || item.unit}"`,
+        `"${this.cleanPdfText(item.name)}"`,
+        `"${this.cleanPdfText(item.category)}"`,
+        `"${this.cleanPdfText(item.type)}"`,
+        `"${this.cleanPdfText(item.unit)}"`,
         item.quantity,
         item.threshold,
         item.costPrice,
@@ -242,10 +700,10 @@ class ReportsEngine {
       const row = [
         `"${e.id}"`,
         `"${e.date}"`,
-        `"${window.hsI18n.t(e.category) || e.category}"`,
-        `"${(e.title || "").replace(/"/g, '""')}"`,
-        `"${(e.vendor || "").replace(/"/g, '""')}"`,
-        `"${window.hsI18n.t(e.method) || e.method}"`,
+        `"${this.cleanPdfText(e.category)}"`,
+        `"${this.cleanPdfText(e.title)}"`,
+        `"${this.cleanPdfText(e.vendor)}"`,
+        `"${this.cleanPdfText(e.method)}"`,
         e.amount
       ];
       csv += row.join(",") + "\n";
@@ -263,12 +721,12 @@ class ReportsEngine {
       const row = [
         `"${s.id}"`,
         `"${s.date}"`,
-        `"${(s.item || "").replace(/"/g, '""')}"`,
+        `"${this.cleanPdfText(s.item)}"`,
         s.quantity,
         s.cost || 0,
         s.total,
         netGain,
-        `"${window.hsI18n.t(s.method) || s.method}"`
+        `"${this.cleanPdfText(s.method)}"`
       ];
       csv += row.join(",") + "\n";
     });
@@ -276,7 +734,7 @@ class ReportsEngine {
     this.downloadFile(csv, `HealthShark_Sales_${year}_Month_${monthIndex}.csv`, "text/csv;charset=utf-8;");
   }
 
-  // --- JSON BACKUP EXPORT & RESTORE ---
+  // JSON Full Backup
   exportFullBackupJSON() {
     const jsonStr = window.hsStore.exportDatabase();
     const dateStr = new Date().toISOString().split("T")[0];
@@ -300,7 +758,6 @@ class ReportsEngine {
     reader.readAsText(file);
   }
 
-  // Generic File Downloader Helper
   downloadFile(content, fileName, mimeType) {
     const blob = new Blob(["\uFEFF" + content], { type: mimeType });
     const url = URL.createObjectURL(blob);

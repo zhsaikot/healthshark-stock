@@ -418,7 +418,14 @@
             <i class="fa-solid fa-plus text-sm"></i> <span data-i18n="btnAddNewItem">নতুন আইটেম যোগ</span>
           </button>
           <button 
-            onclick="window.hsReports.exportStockCSV()"
+            onclick="window.hsApp.openExportModal('stock', 'pdf')"
+            class="px-4 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-brand-950 font-extrabold text-sm sm:text-base transition-all flex items-center gap-2 shadow-sm"
+            title="Download Today's Stock PDF for Owner"
+          >
+            <i class="fa-solid fa-file-pdf text-rose-700 text-lg"></i> <span class="hidden sm:inline">Stock PDF</span>
+          </button>
+          <button 
+            onclick="window.hsApp.openExportModal('stock', 'csv')"
             class="px-4 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 font-bold text-sm sm:text-base transition-all flex items-center gap-2 border border-gray-200 dark:border-slate-700 shadow-sm"
             title="Download Excel / CSV"
           >
@@ -680,20 +687,26 @@
 
           <div class="flex flex-wrap items-center gap-3 mt-6">
             <button 
-              onclick="window.hsReports.generateMonthlyPDF(window.hsStore.selectedMonthFilter, window.hsStore.selectedYearFilter)"
-              class="px-5 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-brand-950 font-heading font-extrabold text-sm transition-all shadow-lg flex items-center gap-2.5"
+              onclick="window.hsApp.openExportModal('master', 'pdf')"
+              class="px-5 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-brand-950 font-heading font-extrabold text-sm sm:text-base transition-all shadow-lg flex items-center gap-2.5"
             >
-              <i class="fa-solid fa-file-pdf text-lg"></i> <span data-i18n="btnDownloadPDF">PDF রিপোর্ট ডাউনলোড</span>
+              <i class="fa-solid fa-file-pdf text-xl text-rose-700"></i> <span data-i18n="btnDownloadPDF">PDF রিপোর্ট ডাউনলোড</span>
             </button>
             <button 
-              onclick="window.hsReports.exportExpensesCSV(window.hsStore.selectedMonthFilter, window.hsStore.selectedYearFilter)"
-              class="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all border border-white/20 flex items-center gap-2"
+              onclick="window.hsApp.openExportModal('stock', 'pdf')"
+              class="px-5 py-3 rounded-2xl bg-white/20 hover:bg-white/30 text-white font-extrabold text-sm sm:text-base transition-all border border-white/30 flex items-center gap-2"
+            >
+              <i class="fa-solid fa-boxes-stacked text-amber-300"></i> Today's Stock PDF
+            </button>
+            <button 
+              onclick="window.hsApp.openExportModal('expenses', 'csv')"
+              class="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm transition-all border border-white/20 flex items-center gap-2"
             >
               <i class="fa-solid fa-file-csv text-emerald-400"></i> Expenses CSV
             </button>
             <button 
-              onclick="window.hsReports.exportSalesCSV(window.hsStore.selectedMonthFilter, window.hsStore.selectedYearFilter)"
-              class="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all border border-white/20 flex items-center gap-2"
+              onclick="window.hsApp.openExportModal('sales', 'csv')"
+              class="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm transition-all border border-white/20 flex items-center gap-2"
             >
               <i class="fa-solid fa-file-csv text-teal-400"></i> Sales CSV
             </button>
@@ -1137,6 +1150,107 @@
           <button type="button" onclick="window.hsApp.handleImportFile()" class="px-5 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white shadow-sm" data-i18n="btnConfirm">রিস্টোর নিশ্চিত করুন</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: EXPORT REPORT (STOCK, SALES, EXPENSES, PROFIT, ALL-IN-ONE) -->
+  <!-- ========================================================================= -->
+  <div id="modal-export-report" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#122017] rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-gray-200 dark:border-slate-800">
+      <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-slate-800">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-brand-50 dark:bg-brand-950/50 text-brand-700 dark:text-brand-400 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-file-export"></i>
+          </div>
+          <div>
+            <h3 class="font-heading font-extrabold text-lg sm:text-xl text-gray-900 dark:text-gray-100" data-i18n="modalExportTitle">
+              Export Business & Stock Report
+            </h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Download formatted PDF or CSV for business owner</p>
+          </div>
+        </div>
+        <button onclick="window.hsApp.closeModal('modal-export-report')" class="w-9 h-9 rounded-full bg-gray-100 dark:bg-slate-800 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <form id="export-report-form" class="space-y-4 mt-5">
+        <!-- 1. Report Category -->
+        <div>
+          <label class="block text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="labelSelectReportType">
+            Select Report Type
+          </label>
+          <select id="export-report-type" class="w-full px-4 py-3 rounded-2xl text-xs sm:text-sm bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200 font-bold focus:border-brand-600 transition-all">
+            <option value="stock" data-i18n="optReportStock">📦 Stock & Inventory (Live Current Status / আজকের স্টক)</option>
+            <option value="sales" data-i18n="optReportSales">💰 Sales & Food Orders (বিক্রি ও আয়ের হিসাব)</option>
+            <option value="expenses" data-i18n="optReportExpenses">📉 Costing & Expenses (খরচ ও ব্যয়ের হিসাব)</option>
+            <option value="profit" data-i18n="optReportProfit">📊 Profit & Loss (P&L) Summary (লাভ-ক্ষতি ও মুনাফা)</option>
+            <option value="master" data-i18n="optReportMaster">📑 Complete Master Monthly Statement (পূর্ণাঙ্গ মাসিক স্টেটমেন্ট)</option>
+          </select>
+        </div>
+
+        <!-- 2. Time Period -->
+        <div>
+          <label class="block text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="labelSelectPeriod">
+            Select Period / Date
+          </label>
+          <select id="export-period" class="w-full px-4 py-3 rounded-2xl text-xs sm:text-sm bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200 font-bold focus:border-brand-600 transition-all">
+            <option value="today" data-i18n="optPeriodToday">📅 Today's Live Date (আজকের ফ্রেশ স্টক রিপোর্ট)</option>
+            <option value="month" data-i18n="optPeriodMonth">🗓️ Specific Month (নির্দিষ্ট মাস)</option>
+            <option value="all" data-i18n="optPeriodAll">🌐 All Time / Annual (সার্বক্ষণিক / পুরো বছর)</option>
+          </select>
+        </div>
+
+        <!-- Month and Year Selection (Visible when Specific Month is active) -->
+        <div id="export-month-row" class="hidden grid grid-cols-2 gap-3 p-3 bg-gray-50 dark:bg-slate-800/60 rounded-2xl border border-gray-100 dark:border-slate-800">
+          <div>
+            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">Month</label>
+            <select id="export-month" class="w-full px-3 py-2 rounded-xl text-xs sm:text-sm bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 font-bold">
+              <option value="0">January</option>
+              <option value="1">February</option>
+              <option value="2">March</option>
+              <option value="3">April</option>
+              <option value="4">May</option>
+              <option value="5">June</option>
+              <option value="6">July</option>
+              <option value="7">August</option>
+              <option value="8">September</option>
+              <option value="9">October</option>
+              <option value="10">November</option>
+              <option value="11">December</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">Year</label>
+            <select id="export-year" class="w-full px-3 py-2 rounded-xl text-xs sm:text-sm bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 font-bold">
+              <option value="2025">2025</option>
+              <option value="2026" selected>2026</option>
+              <option value="2027">2027</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 3. Export Format -->
+        <div>
+          <label class="block text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="labelSelectFormat">
+            Select Export Format
+          </label>
+          <select id="export-format" class="w-full px-4 py-3 rounded-2xl text-xs sm:text-sm bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200 font-bold focus:border-brand-600 transition-all">
+            <option value="pdf" data-i18n="optFormatPdf">📄 PDF Document (.pdf - Formatted for Owner)</option>
+            <option value="csv" data-i18n="optFormatCsv">📊 Excel / CSV Spreadsheet (.csv)</option>
+          </select>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-slate-800">
+          <button type="button" onclick="window.hsApp.closeModal('modal-export-report')" class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors" data-i18n="btnCancel">
+            বাতিল
+          </button>
+          <button type="submit" class="px-6 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold bg-brand-700 hover:bg-brand-800 text-white shadow-md flex items-center gap-2 transition-all">
+            <i class="fa-solid fa-download"></i> <span data-i18n="btnDownloadReport">রিপোর্ট ডাউনলোড করুন</span>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 
