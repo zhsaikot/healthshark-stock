@@ -146,6 +146,11 @@ class HealthSharkApp {
     if (save) {
       localStorage.setItem("hs_sidebar_collapsed", collapsed ? "true" : "false");
     }
+
+    // Trigger Chart.js resize once sidebar animation finishes
+    setTimeout(() => {
+      window.dispatchEvent(new Event("resize"));
+    }, 320);
   }
 
   toggleMobileSidebar(open) {
