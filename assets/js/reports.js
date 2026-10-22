@@ -230,25 +230,30 @@ class ReportsEngine {
     doc.text(`COMPLETE INVENTORY LEDGER (${items.length} Items)`, 14, currentY);
 
     const stockRows = items.map((item) => {
-      const totalVal = (Number(item.quantity) || 0) * (Number(item.costPrice) || 0);
+      const qty = Number(item.quantity) || 0;
+      const cost = Number(item.costPrice) || 0;
+      const sell = Number(item.sellingPrice) || 0;
+      const totalCost = qty * cost;
+      const totalSell = qty * sell;
       let status = "IN STOCK";
-      if (item.quantity === 0) status = "OUT";
-      else if (item.quantity <= item.threshold) status = "LOW";
+      if (qty === 0) status = "OUT";
+      else if (qty <= item.threshold) status = "LOW";
 
       return [
         this.cleanPdfText(item.name),
         this.cleanPdfText(item.category),
-        `${item.quantity} ${this.cleanPdfText(item.unit)}`,
-        `Tk. ${Number(item.costPrice).toLocaleString()}`,
-        item.sellingPrice ? `Tk. ${Number(item.sellingPrice).toLocaleString()}` : "-",
-        `Tk. ${totalVal.toLocaleString()}`,
+        `${qty} ${this.cleanPdfText(item.unit)}`,
+        `Tk. ${cost.toLocaleString()}`,
+        sell > 0 ? `Tk. ${sell.toLocaleString()}` : "-",
+        `Tk. ${totalCost.toLocaleString()}`,
+        sell > 0 ? `Tk. ${totalSell.toLocaleString()}` : "-",
         status
       ];
     });
 
     doc.autoTable({
       startY: currentY + 3,
-      head: [["Item Name", "Category", "Quantity", "Unit Cost", "Sell Price", "Total Valuation", "Status"]],
+      head: [["Item Name", "Category", "Quantity", "Unit Cost", "Sell Price", "Total Cost", "Total Sell", "Status"]],
       body: stockRows,
       theme: "striped",
       styles: { fontSize: 8, cellPadding: 2.5, font: "helvetica" },
@@ -670,21 +675,27 @@ class ReportsEngine {
   // CSV Helpers
   exportStockCSV() {
     const items = window.hsStore.getItems();
-    let csv = "Item ID,Item Name,Category,Type,Unit,Quantity,Threshold,Unit Cost (BDT),Selling Price (BDT),Total Valuation (BDT)\n";
+    let csv = "Item ID,Item Name,Category,Type,Unit,Quantity,Threshold,Unit Cost (BDT),Selling Price (BDT),Total Cost (BDT),Total Selling Value (BDT)\n";
 
     items.forEach((item) => {
-      const totalVal = (Number(item.quantity) || 0) * (Number(item.costPrice) || 0);
+      const qty = Number(item.quantity) || 0;
+      const cost = Number(item.costPrice) || 0;
+      const sell = Number(item.sellingPrice) || 0;
+      const totalCost = qty * cost;
+      const totalSell = qty * sell;
+
       const row = [
         `"${item.id || ""}"`,
         `"${this.cleanPdfText(item.name)}"`,
         `"${this.cleanPdfText(item.category)}"`,
         `"${this.cleanPdfText(item.type)}"`,
         `"${this.cleanPdfText(item.unit)}"`,
-        item.quantity,
+        qty,
         item.threshold,
-        item.costPrice,
-        item.sellingPrice || 0,
-        totalVal
+        cost,
+        sell,
+        totalCost,
+        totalSell
       ];
       csv += row.join(",") + "\n";
     });

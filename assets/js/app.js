@@ -571,7 +571,7 @@ class HealthSharkApp {
     if (items.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="9" class="py-16 text-center text-gray-400 dark:text-gray-500 text-sm">
+          <td colspan="11" class="py-16 text-center text-gray-400 dark:text-gray-500 text-sm">
             <i class="fa-solid fa-box-open text-4xl mb-3 block opacity-40"></i>
             <span data-i18n="emptyTable">${window.hsI18n.t("emptyTable")}</span>
           </td>
@@ -585,7 +585,8 @@ class HealthSharkApp {
       const threshold = Number(item.threshold) || 0;
       const cost = Number(item.costPrice) || 0;
       const sell = Number(item.sellingPrice) || 0;
-      const totalVal = qty * cost;
+      const totalCost = qty * cost;
+      const totalSell = qty * sell;
 
       let statusBadge = "";
       if (qty === 0) {
@@ -621,7 +622,10 @@ class HealthSharkApp {
             ${sell > 0 ? `৳${sell.toLocaleString()}` : `<span class="text-gray-300 dark:text-gray-600">-</span>`}
           </td>
           <td class="py-4 px-5 text-base font-black text-brand-800 dark:text-brand-300">
-            ৳${totalVal.toLocaleString()}
+            ৳${totalCost.toLocaleString()}
+          </td>
+          <td class="py-4 px-5 text-base font-black text-emerald-700 dark:text-emerald-400">
+            ${sell > 0 ? `৳${totalSell.toLocaleString()}` : `<span class="text-gray-300 dark:text-gray-600">-</span>`}
           </td>
           <td class="py-4 px-5">
             ${statusBadge}

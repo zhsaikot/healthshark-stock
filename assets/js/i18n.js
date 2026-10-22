@@ -71,7 +71,9 @@ const translations = {
     thMinThreshold: "Min Level",
     thCostPrice: "Unit Cost",
     thSellingPrice: "Sell Price",
-    thTotalValue: "Total Value",
+    thTotalCostValue: "Total Cost",
+    thTotalSellingValue: "Total Selling Value",
+    thTotalValue: "Total Cost",
     thStatus: "Status",
     thActions: "Actions",
 
@@ -416,7 +418,9 @@ const translations = {
     thMinThreshold: "সতর্কতা সীমা",
     thCostPrice: "ক্রয়মূল্য",
     thSellingPrice: "বিক্রয়মূল্য",
-    thTotalValue: "মোট মূল্য",
+    thTotalCostValue: "মোট ক্রয়মূল্য",
+    thTotalSellingValue: "মোট বিক্রয়মূল্য",
+    thTotalValue: "মোট ক্রয়মূল্য",
     thStatus: "অবস্থা",
     thActions: "অ্যাকশন",
 

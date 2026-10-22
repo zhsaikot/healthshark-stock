@@ -290,6 +290,7 @@ class DataStore {
   getStockMetrics() {
     const items = this.data.items || [];
     let totalValue = 0;
+    let totalSellingValue = 0;
     let lowStockCount = 0;
     let outOfStockCount = 0;
     const urgentItems = [];
@@ -297,9 +298,11 @@ class DataStore {
     items.forEach((item) => {
       const qty = Number(item.quantity) || 0;
       const cost = Number(item.costPrice) || 0;
+      const sell = Number(item.sellingPrice) || 0;
       const threshold = Number(item.threshold) || 0;
 
       totalValue += qty * cost;
+      totalSellingValue += qty * sell;
 
       if (qty === 0) {
         outOfStockCount++;
@@ -313,6 +316,7 @@ class DataStore {
     return {
       totalItems: items.length,
       totalValue,
+      totalSellingValue,
       lowStockCount,
       outOfStockCount,
       urgentItems
