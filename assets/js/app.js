@@ -981,9 +981,13 @@ class HealthSharkApp {
 
     if (customNameInput && customNameInput.value.trim()) {
       name = customNameInput.value.trim();
-      const matched = window.hsStore.getItems().find(
-        (i) => i.name.trim().toLowerCase() === name.toLowerCase()
-      );
+      const clean = name.toLowerCase();
+      const allItems = window.hsStore.getItems();
+      const matched = allItems.find((i) => (i.name || "").trim().toLowerCase() === clean) ||
+                      allItems.find((i) => {
+                        const iName = (i.name || "").toLowerCase();
+                        return iName.includes(clean) || clean.includes(iName);
+                      });
       if (matched) {
         itemId = matched.id;
         unit = unit || matched.unit;
@@ -1156,6 +1160,14 @@ class HealthSharkApp {
   }
 
   handleCreateInvoice(printImmediately = false) {
+    // Auto-commit pending item from inputs if user forgot to click the '+' button
+    const select = document.getElementById("inv-item-select");
+    const customNameInput = document.getElementById("inv-custom-name");
+    const hasPendingItem = (select && select.value) || (customNameInput && customNameInput.value.trim());
+    if (this.invoiceDraftItems.length === 0 && hasPendingItem) {
+      this.addInvoiceDraftItem();
+    }
+
     if (this.invoiceDraftItems.length === 0) {
       this.showToast(window.hsI18n.currentLang === "bn" ? "অনুগ্রহ করে অন্তত একটি আইটেম যোগ করুন" : "Please add at least one item to the invoice", "warning");
       return;
@@ -1217,7 +1229,7 @@ class HealthSharkApp {
     const syncCheckbox = document.getElementById("inv-sync-sales");
     const shouldSyncToSales = syncCheckbox ? syncCheckbox.checked : true;
 
-    if (shouldSyncToSales && grandTotal > 0 && targetInvoice) {
+    if (shouldSyncToSales && targetInvoice) {
       const methodMap = {
         Cash: "payCash",
         bKash: "payBkash",
@@ -1272,6 +1284,7 @@ class HealthSharkApp {
     // Reset Form & Update History
     this.clearInvoiceForm();
     this.renderInvoicesHistoryTable();
+    this.renderAll();
   }
 
   clearInvoiceForm() {
@@ -2220,6 +2233,19 @@ class HealthSharkApp {
     if (invDiscountInput) invDiscountInput.addEventListener("input", () => this.calculateInvoiceTotals());
     if (invDeliveryInput) invDeliveryInput.addEventListener("input", () => this.calculateInvoiceTotals());
     if (invPaidInput) invPaidInput.addEventListener("input", () => this.calculateInvoiceTotals());
+
+    // Enter key shortcuts to quickly add draft items in Invoice form
+    ["inv-item-qty", "inv-item-price", "inv-custom-name"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            this.addInvoiceDraftItem();
+          }
+        });
+      }
+    });
 
     // Physical Keyboard Listener for Interactive Calculator
     window.addEventListener("keydown", (e) => {

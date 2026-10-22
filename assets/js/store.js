@@ -468,9 +468,18 @@ class DataStore {
     }
     if (name) {
       const clean = name.trim().toLowerCase();
-      return (this.data.items || []).find(
+      // 1. Exact match
+      let item = (this.data.items || []).find(
         (i) => i.name.trim().toLowerCase() === clean
       );
+      if (item) return item;
+
+      // 2. Partial / bilingual substring match (e.g. user typed "পোলাও চাল" and item is "Chinigura Polao Rice (পোলাও চাল)")
+      item = (this.data.items || []).find((i) => {
+        const iName = (i.name || "").trim().toLowerCase();
+        return iName.includes(clean) || clean.includes(iName);
+      });
+      if (item) return item;
     }
     return null;
   }
