@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="bn" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Health Shark - Stock & Financial Management Dashboard</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              200: '#bbf7d0',
+              300: '#86efac',
+              400: '#4ade80',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+              950: '#0c361e',
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', '"Hind Siliguri"', 'sans-serif'],
+            heading: ['"Outfit"', '"Hind Siliguri"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts & Font Awesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="assets/css/style.css" />
+
+  <!-- External Chart & PDF Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body class="bg-[#f8faf8] dark:bg-[#0b130e] text-gray-800 dark:text-gray-100 min-h-screen flex flex-col antialiased">
+
+  <!-- ==================== TOP NAVIGATION BAR ==================== -->
+  <header class="sticky top-0 z-40 bg-white/95 dark:bg-[#0f1b13]/95 backdrop-blur-md border-b border-gray-200/80 dark:border-slate-800 shadow-sm transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+        
+        <!-- Left: Logo & Branding -->
+        <div class="flex items-center gap-3">
+          <img src="assets/images/logo.png" alt="Health Shark Logo" class="h-12 w-auto object-contain transition-transform hover:scale-105" />
+          <div>
+            <h1 class="font-heading font-extrabold text-xl text-brand-900 dark:text-brand-300 tracking-tight leading-tight" data-i18n="brandName">
+              হেল্থ শার্ক
+            </h1>
+            <p class="text-[11px] font-semibold text-brand-700 dark:text-brand-400 uppercase tracking-wider" data-i18n="brandSubtitle">
+              স্টক ও ব্যবসা ব্যবস্থাপনা ড্যাশবোর্ড
+            </p>
+          </div>
+        </div>
+
+        <!-- Center: Month & Year Selector Filter -->
+        <div class="hidden md:flex items-center gap-2 bg-gray-100 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-gray-200 dark:border-slate-700">
+          <i class="fa-solid fa-calendar-days text-brand-700 dark:text-brand-400 pl-2 text-xs"></i>
+          <select id="filter-month-select" class="bg-transparent text-xs font-bold text-gray-700 dark:text-gray-200 border-0 cursor-pointer focus:ring-0">
+            <option value="all">সকল মাস (All Months)</option>
+            <option value="0">জানুয়ারি (January)</option>
+            <option value="1">ফেব্রুয়ারি (February)</option>
+            <option value="2">মার্চ (March)</option>
+            <option value="3">এপ্রিল (April)</option>
+            <option value="4">মে (May)</option>
+            <option value="5">জুন (June)</option>
+            <option value="6">জুলাই (July)</option>
+            <option value="7">আগস্ট (August)</option>
+            <option value="8">সেপ্টেম্বর (September)</option>
+            <option value="9">অক্টোবর (October)</option>
+            <option value="10">নভেম্বর (November)</option>
+            <option value="11">ডিসেম্বর (December)</option>
+          </select>
+          <span class="text-gray-300 dark:text-gray-600">|</span>
+          <select id="filter-year-select" class="bg-transparent text-xs font-bold text-gray-700 dark:text-gray-200 border-0 cursor-pointer focus:ring-0 pr-2">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+
+        <!-- Right: Language Pill, Theme Switch, Mobile Button -->
+        <div class="flex items-center gap-3">
+          <!-- Language Toggle (বাংলা | EN) -->
+          <div class="inline-flex items-center bg-gray-100 dark:bg-slate-800 p-1 rounded-full border border-gray-200 dark:border-slate-700 text-xs font-bold">
+            <button id="lang-btn-bn" type="button" class="px-2.5 py-1 rounded-full text-xs font-bold transition-all bg-brand-700 text-white shadow-sm">
+              বাংলা
+            </button>
+            <button id="lang-btn-en" type="button" class="px-2.5 py-1 rounded-full text-xs font-bold transition-all text-gray-600 dark:text-gray-300 hover:text-brand-700">
+              EN
+            </button>
+          </div>
+
+          <!-- Dark / Light Mode Toggle -->
+          <button 
+            id="theme-toggle-btn"
+            type="button" 
+            title="Toggle Dark / Light Theme"
+            class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center transition-colors border border-gray-200 dark:border-slate-700 shadow-sm"
+          >
+            <i id="theme-icon" class="fa-solid fa-moon text-gray-600 dark:text-amber-400 text-sm"></i>
+          </button>
+
+          <!-- Mobile Menu Hamburger -->
+          <button 
+            id="mobile-menu-btn"
+            type="button" 
+            class="md:hidden w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-800 flex items-center justify-center text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-slate-700"
+          >
+            <i class="fa-solid fa-bars text-base"></i>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Mobile Month Picker Row -->
+      <div class="md:hidden pb-3 flex items-center gap-2">
+        <div class="flex-1 flex items-center gap-2 bg-gray-100 dark:bg-slate-800 p-2 rounded-xl text-xs font-bold">
+          <i class="fa-solid fa-calendar-days text-brand-700 text-xs"></i>
+          <select id="filter-month-select-mobile" onchange="document.getElementById('filter-month-select').value=this.value; document.getElementById('filter-month-select').dispatchEvent(new Event('change'))" class="bg-transparent flex-1 border-0 text-xs">
+            <option value="all">সকল মাস (All Months)</option>
+            <option value="0">জানুয়ারি</option>
+            <option value="1">ফেব্রুয়ারি</option>
+            <option value="2">মার্চ</option>
+            <option value="3">এপ্রিল</option>
+            <option value="4">মে</option>
+            <option value="5">জুন</option>
+            <option value="6">জুলাই</option>
+            <option value="7">আগস্ট</option>
+            <option value="8">সেপ্টেম্বর</option>
+            <option value="9">অক্টোবর</option>
+            <option value="10">নভেম্বর</option>
+            <option value="11">ডিসেম্বর</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== MOBILE DRAWER ==================== -->
+  <div id="mobile-drawer" class="hidden md:hidden bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 px-4 py-3 space-y-1 shadow-lg transition-all">
+    <button data-tab="dashboard" class="nav-link w-full text-left px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-3">
+      <i class="fa-solid fa-chart-pie w-5 text-center"></i> <span data-i18n="navDashboard">ড্যাশবোর্ড</span>
+    </button>
+    <button data-tab="stock" class="nav-link w-full text-left px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-3">
+      <i class="fa-solid fa-boxes-stacked w-5 text-center"></i> <span data-i18n="navStock">স্টক ইনভেন্টরি</span>
+    </button>
+    <button data-tab="expenses" class="nav-link w-full text-left px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-3">
+      <i class="fa-solid fa-receipt w-5 text-center"></i> <span data-i18n="navExpenses">খরচ ও ব্যয়</span>
+    </button>
+    <button data-tab="income" class="nav-link w-full text-left px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-3">
+      <i class="fa-solid fa-sack-dollar w-5 text-center"></i> <span data-i18n="navIncome">বিক্রি ও লাভ</span>
+    </button>
+    <button data-tab="employees" class="nav-link w-full text-left px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-3">
+      <i class="fa-solid fa-users w-5 text-center"></i> <span data-i18n="navEmployees">কর্মচারীবৃন্দ</span>
+    </button>
+    <button data-tab="reports" class="nav-link w-full text-left px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-3">
+      <i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i> <span data-i18n="navReports">মাসিক রিপোর্ট</span>
+    </button>
+  </div>
+
+  <!-- ==================== MAIN CONTENT CONTAINER ==================== -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+
+    <!-- ==================== TOP KPI SUMMARY CARDS ==================== -->
+    <section class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+      
+      <!-- Card 1: Total Stock Value -->
+      <div class="col-span-2 sm:col-span-1 bg-white dark:bg-[#122017] p-4 rounded-2xl border border-gray-200/80 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider" data-i18n="kpiStockValue">
+            মোট স্টক মূল্য
+          </span>
+          <div class="w-8 h-8 rounded-xl bg-brand-50 dark:bg-brand-950/50 text-brand-700 dark:text-brand-400 flex items-center justify-center text-xs">
+            <i class="fa-solid fa-boxes-stacked"></i>
+          </div>
+        </div>
+        <p id="kpi-stock-value" class="text-2xl font-heading font-extrabold text-brand-900 dark:text-brand-300 mt-2">৳0</p>
+        <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5 truncate" data-i18n="kpiStockValueSub">বর্তমান মজুদ পণ্যের মূল্য</p>
+      </div>
+
+      <!-- Card 2: Low Stock Alerts -->
+      <div class="bg-white dark:bg-[#122017] p-4 rounded-2xl border border-gray-200/80 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider" data-i18n="kpiLowStock">
+            কম স্টক
+          </span>
+          <div class="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+        </div>
+        <div class="flex items-baseline gap-2 mt-2">
+          <p id="kpi-low-stock-count" class="text-2xl font-heading font-extrabold text-amber-600 dark:text-amber-400">0</p>
+          <span id="kpi-low-stock-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 animate-pulse">
+            অ্যালার্ট!
+          </span>
+        </div>
+        <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5 truncate" data-i18n="kpiLowStockSub">সর্বনিম্ন সীমার নিচে</p>
+      </div>
+
+      <!-- Card 3: Monthly Income -->
+      <div class="bg-white dark:bg-[#122017] p-4 rounded-2xl border border-gray-200/80 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider" data-i18n="kpiIncome">
+            মোট আয়
+          </span>
+          <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs">
+            <i class="fa-solid fa-arrow-trend-up"></i>
+          </div>
+        </div>
+        <p id="kpi-monthly-income" class="text-2xl font-heading font-extrabold text-emerald-600 dark:text-emerald-400 mt-2">৳0</p>
+        <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5 truncate" data-i18n="kpiIncomeSub">চলতি মাসের বিক্রি</p>
+      </div>
+
+      <!-- Card 4: Monthly Expense -->
+      <div class="bg-white dark:bg-[#122017] p-4 rounded-2xl border border-gray-200/80 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider" data-i18n="kpiExpense">
+            মোট ব্যয়
+          </span>
+          <div class="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center text-xs">
+            <i class="fa-solid fa-arrow-trend-down"></i>
+          </div>
+        </div>
+        <p id="kpi-monthly-expense" class="text-2xl font-heading font-extrabold text-rose-600 dark:text-rose-400 mt-2">৳0</p>
+        <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5 truncate" data-i18n="kpiExpenseSub">কাঁচামাল ও কিচেন খরচ</p>
+      </div>
+
+      <!-- Card 5: Net Profit -->
+      <div class="col-span-2 sm:col-span-1 bg-white dark:bg-[#122017] p-4 rounded-2xl border border-gray-200/80 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider" data-i18n="kpiNetProfit">
+            নিট লাভ
+          </span>
+          <div class="w-8 h-8 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center text-xs">
+            <i class="fa-solid fa-scale-balanced"></i>
+          </div>
+        </div>
+        <div class="flex items-baseline gap-2 mt-2">
+          <p id="kpi-net-profit" class="text-2xl font-heading font-extrabold text-brand-700 dark:text-brand-400">৳0</p>
+          <span id="kpi-profit-margin" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300">
+            0%
+          </span>
+        </div>
+        <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5 truncate" data-i18n="kpiNetProfitSub">আয় থেকে মোট খরচ বাদ দিয়ে</p>
+      </div>
+
+    </section>
+
+    <!-- ==================== DESKTOP TABS NAVIGATION ==================== -->
+    <nav class="hidden md:flex items-center gap-1.5 p-1.5 bg-gray-100 dark:bg-slate-800/80 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-inner">
+      <button data-tab="dashboard" class="nav-link flex-1 py-2.5 px-4 rounded-xl font-bold text-xs lg:text-sm transition-all flex items-center justify-center gap-2">
+        <i class="fa-solid fa-chart-pie text-xs"></i> <span data-i18n="navDashboard">ড্যাশবোর্ড</span>
+      </button>
+      <button data-tab="stock" class="nav-link flex-1 py-2.5 px-4 rounded-xl font-bold text-xs lg:text-sm transition-all flex items-center justify-center gap-2">
+        <i class="fa-solid fa-boxes-stacked text-xs"></i> <span data-i18n="navStock">স্টক ইনভেন্টরি</span>
+      </button>
+      <button data-tab="expenses" class="nav-link flex-1 py-2.5 px-4 rounded-xl font-bold text-xs lg:text-sm transition-all flex items-center justify-center gap-2">
+        <i class="fa-solid fa-receipt text-xs"></i> <span data-i18n="navExpenses">খরচ ও ব্যয়</span>
+      </button>
+      <button data-tab="income" class="nav-link flex-1 py-2.5 px-4 rounded-xl font-bold text-xs lg:text-sm transition-all flex items-center justify-center gap-2">
+        <i class="fa-solid fa-sack-dollar text-xs"></i> <span data-i18n="navIncome">বিক্রি ও লাভ</span>
+      </button>
+      <button data-tab="employees" class="nav-link flex-1 py-2.5 px-4 rounded-xl font-bold text-xs lg:text-sm transition-all flex items-center justify-center gap-2">
+        <i class="fa-solid fa-users text-xs"></i> <span data-i18n="navEmployees">কর্মচারীবৃন্দ</span>
+      </button>
+      <button data-tab="reports" class="nav-link flex-1 py-2.5 px-4 rounded-xl font-bold text-xs lg:text-sm transition-all flex items-center justify-center gap-2">
+        <i class="fa-solid fa-file-invoice-dollar text-xs"></i> <span data-i18n="navReports">মাসিক রিপোর্ট</span>
+      </button>
+    </nav>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 1: DASHBOARD OVERVIEW -->
+    <!-- ========================================================================= -->
+    <div id="tab-dashboard" class="tab-pane active space-y-6">
+      
+      <!-- Charts Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Income vs Expense Bar Chart -->
+        <div class="lg:col-span-2 bg-white dark:bg-[#122017] p-5 rounded-2xl border border-gray-200/80 dark:border-slate-800 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="font-heading font-bold text-base text-gray-800 dark:text-gray-100" data-i18n="financialTrendsTitle">
+                আয় ও ব্যয়ের তুলনা
+              </h3>
+              <p class="text-xs text-gray-400 dark:text-gray-500" data-i18n="financialTrendsSub">মাসিক আয় ও ব্যয়ের তুলনামূলক গ্রাফ</p>
+            </div>
+            <span class="text-xs font-semibold px-2.5 py-1 bg-gray-100 dark:bg-slate-800 rounded-lg text-gray-600 dark:text-gray-300">
+              <i class="fa-solid fa-chart-simple mr-1 text-brand-600"></i> Annual Trend
+            </span>
+          </div>
+          <div class="h-64 relative">
+            <canvas id="chart-financial-trends"></canvas>
+          </div>
+        </div>
+
+        <!-- Stock Category Doughnut Chart -->
+        <div class="bg-white dark:bg-[#122017] p-5 rounded-2xl border border-gray-200/80 dark:border-slate-800 shadow-sm">
+          <div class="mb-4">
+            <h3 class="font-heading font-bold text-base text-gray-800 dark:text-gray-100" data-i18n="stockDistributionTitle">
+              স্টকের ক্যাটাগরি বিন্যাস
+            </h3>
+            <p class="text-xs text-gray-400 dark:text-gray-500" data-i18n="stockDistributionSub">কোন ক্যাটাগরিতে কত টাকার মাল আছে</p>
+          </div>
+          <div class="h-64 relative flex items-center justify-center">
+            <canvas id="chart-stock-distribution"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Urgent Stock & Activity Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Urgent Stock Alerts Card -->
+        <div class="bg-white dark:bg-[#122017] p-5 rounded-2xl border border-gray-200/80 dark:border-slate-800 shadow-sm">
+          <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-slate-800">
+            <div>
+              <h3 class="font-heading font-bold text-base text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                <i class="fa-solid fa-bell text-amber-500"></i>
+                <span data-i18n="urgentRestockTitle">জরুরিভাবে স্টক বাড়াতে হবে</span>
+              </h3>
+              <p class="text-xs text-gray-400 dark:text-gray-500" data-i18n="urgentRestockSub">যেসব কাঁচামাল বা খাবার সর্বনিম্ন সীমার নিচে</p>
+            </div>
+            <button onclick="window.hsApp.switchTab('stock')" class="text-xs font-bold text-brand-700 dark:text-brand-400 hover:underline">
+              <span data-i18n="viewAllStock">সব স্টক দেখুন</span> &rarr;
+            </button>
+          </div>
+          <div id="urgent-stock-list" class="mt-2">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Recent Activity Log Card -->
+        <div class="bg-white dark:bg-[#122017] p-5 rounded-2xl border border-gray-200/80 dark:border-slate-800 shadow-sm">
+          <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-slate-800">
+            <div>
+              <h3 class="font-heading font-bold text-base text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left text-brand-600"></i>
+                <span data-i18n="recentActivityTitle">সাম্প্রতিক কার্যক্রম</span>
+              </h3>
+              <p class="text-[11px] text-gray-400 dark:text-gray-500">স্বয়ংক্রিয় অডিট ও লেনদেন লগ</p>
+            </div>
+          </div>
+          <div id="recent-activity-list" class="mt-2 divide-y divide-gray-100 dark:divide-slate-800">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 2: STOCK INVENTORY (MAIN CORE) -->
+    <!-- ========================================================================= -->
+    <div id="tab-stock" class="tab-pane space-y-4">
+      
+      <!-- Top Action Bar -->
+      <div class="bg-white dark:bg-[#122017] p-4 rounded-2xl border border-gray-200/80 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <h2 class="font-heading font-extrabold text-xl text-gray-900 dark:text-gray-100" data-i18n="stockTitle">
+            মজুদ মালামাল ও কাঁচামাল
+          </h2>
+          <p class="text-xs text-gray-500 dark:text-gray-400" data-i18n="stockSubtitle">
+            খাবার তৈরির কাঁচামাল, তৈরি খাদ্য ও প্যাকেজিং বক্সের পূর্ণাঙ্গ হিসাব
+          </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-2.5 w-full md:w-auto">
+          <button 
+            onclick="window.hsApp.openAddItemModal()"
+            class="flex-1 md:flex-initial px-4 py-2.5 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-bold text-xs sm:text-sm transition-all shadow-sm flex items-center justify-center gap-2"
+          >
+            <i class="fa-solid fa-plus"></i> <span data-i18n="btnAddNewItem">নতুন আইটেম যোগ</span>
+          </button>
+          <button 
+            onclick="window.hsReports.exportStockCSV()"
+            class="px-3.5 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 font-bold text-xs sm:text-sm transition-all flex items-center gap-2 border border-gray-200 dark:border-slate-700"
+            title="Download Excel / CSV"
+          >
+            <i class="fa-solid fa-file-csv text-emerald-600 text-base"></i> <span class="hidden sm:inline">CSV</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Search & Filters -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+        <!-- Type Pills Filter -->
+        <div class="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+          <button data-type="all" class="stock-type-pill px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all bg-brand-700 text-white" data-i18n="tabAllItems">
+            সকল মালামাল
+          </button>
+          <button data-type="typeRaw" class="stock-type-pill px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300" data-i18n="tabRawMaterials">
+            কাঁচামাল
+          </button>
+          <button data-type="typeFinished" class="stock-type-pill px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300" data-i18n="tabFinishedFood">
+            তৈরি খাবার
+          </button>
+          <button data-type="typePackaging" class="stock-type-pill px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300" data-i18n="tabPackaging">
+            বক্স ও প্যাকেট
+          </button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative w-full sm:w-72">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+          <input 
+            type="text" 
+            id="stock-search-input"
+            data-i18n-placeholder="searchPlaceholder"
+            placeholder="নাম বা আইডি দিয়ে খুঁজুন..."
+            class="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-white dark:bg-[#122017] border border-gray-200 dark:border-slate-800 text-gray-800 dark:text-gray-200 focus:border-brand-600 transition-colors"
+          />
+        </div>
+      </div>
+
+      <!-- Stock Table Card -->
+      <div class="bg-white dark:bg-[#122017] rounded-2xl border border-gray-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-50/80 dark:bg-slate-800/60 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th class="py-3 px-4" data-i18n="thItemName">পণ্যের নাম</th>
+                <th class="py-3 px-4" data-i18n="thCategory">ক্যাটাগরি</th>
+                <th class="py-3 px-4" data-i18n="thUnit">একক</th>
+                <th class="py-3 px-4" data-i18n="thCurrentStock">বর্তমান মজুদ</th>
+                <th class="py-3 px-4" data-i18n="thMinThreshold">সতর্কতা সীমা</th>
+                <th class="py-3 px-4" data-i18n="thCostPrice">ক্রয়মূল্য</th>
+                <th class="py-3 px-4" data-i18n="thSellingPrice">বিক্রয়মূল্য</th>
+                <th class="py-3 px-4" data-i18n="thTotalValue">মোট মূল্য</th>
+                <th class="py-3 px-4" data-i18n="thStatus">অবস্থা</th>
+                <th class="py-3 px-4 text-right" data-i18n="thActions">অ্যাকশন</th>
+              </tr>
+            </thead>
+            <tbody id="stock-table-body" class="divide-y divide-gray-100 dark:divide-slate-800 text-xs">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 3: COSTING & EXPENSES -->
+    <!-- ========================================================================= -->
+    <div id="tab-expenses" class="tab-pane space-y-4">
+      
+      <!-- Top Header Card -->
+      <div class="bg-white dark:bg-[#122017] p-4 rounded-2xl border border-gray-200/80 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <h2 class="font-heading font-extrabold text-xl text-gray-900 dark:text-gray-100" data-i18n="expensesTitle">
+            খরচ ও ব্যয়ের হিসাব
+          </h2>
+          <p class="text-xs text-gray-500 dark:text-gray-400" data-i18n="expensesSubtitle">
+            কাঁচামাল বাজার, গ্যাস, বিদ্যুৎ, দোকান ভাড়া ও ডেলিভারি খরচ
+          </p>
+        </div>
+
+        <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+          <div class="px-4 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 text-rose-700 dark:text-rose-400">
+            <span class="text-[10px] font-bold uppercase block" data-i18n="totalExpensesLabel">মোট খরচ</span>
+            <span id="expenses-total-amount" class="text-lg font-extrabold font-heading">৳0</span>
+          </div>
+
+          <button 
+            onclick="window.hsApp.openAddExpenseModal()"
+            class="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs sm:text-sm transition-all shadow-sm flex items-center gap-2"
+          >
+            <i class="fa-solid fa-plus"></i> <span data-i18n="btnAddExpense">নতুন খরচ যুক্ত করুন</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Expenses Table -->
+      <div class="bg-white dark:bg-[#122017] rounded-2xl border border-gray-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-50/80 dark:bg-slate-800/60 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th class="py-3 px-4" data-i18n="thExpenseDate">তারিখ</th>
+                <th class="py-3 px-4" data-i18n="thExpenseCategory">ক্যাটাগরি</th>
+                <th class="py-3 px-4" data-i18n="thExpenseTitle">বিবরণ / কারণ</th>
+                <th class="py-3 px-4" data-i18n="thExpenseVendor">প্রাপক / দোকান</th>
+                <th class="py-3 px-4" data-i18n="thExpenseMethod">পেমেন্ট মাধ্যম</th>
+                <th class="py-3 px-4" data-i18n="thExpenseAmount">পরিমাণ (৳)</th>
+                <th class="py-3 px-4 text-right" data-i18n="thActions">অ্যাকশন</th>
+              </tr>
+            </thead>
+            <tbody id="expenses-table-body" class="divide-y divide-gray-100 dark:divide-slate-800 text-xs">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 4: INCOME & PROFIT -->
+    <!-- ========================================================================= -->
+    <div id="tab-income" class="tab-pane space-y-4">
+      
+      <!-- Top Header Card -->
+      <div class="bg-white dark:bg-[#122017] p-4 rounded-2xl border border-gray-200/80 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <h2 class="font-heading font-extrabold text-xl text-gray-900 dark:text-gray-100" data-i18n="incomeTitle">
+            বিক্রি ও লাভ-ক্ষতির হিসাব
+          </h2>
+          <p class="text-xs text-gray-500 dark:text-gray-400" data-i18n="incomeSubtitle">
+            প্রতিদিনের বিক্রি এবং তাৎক্ষণিক নিট মুনাফা পর্যালোচনা
+          </p>
+        </div>
+
+        <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+          <div class="px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-400">
+            <span class="text-[10px] font-bold uppercase block">মোট বিক্রি</span>
+            <span id="sales-total-amount" class="text-lg font-extrabold font-heading">৳0</span>
+          </div>
+
+          <button 
+            onclick="window.hsApp.openAddSaleModal()"
+            class="px-4 py-2.5 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-bold text-xs sm:text-sm transition-all shadow-sm flex items-center gap-2"
+          >
+            <i class="fa-solid fa-plus"></i> <span data-i18n="btnAddSale">বিক্রি লিপিবদ্ধ করুন</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Sales Table -->
+      <div class="bg-white dark:bg-[#122017] rounded-2xl border border-gray-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-50/80 dark:bg-slate-800/60 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th class="py-3 px-4" data-i18n="thSaleDate">তারিখ</th>
+                <th class="py-3 px-4" data-i18n="thSaleItem">খাবারের নাম</th>
+                <th class="py-3 px-4" data-i18n="thSaleQty">পরিমাণ</th>
+                <th class="py-3 px-4" data-i18n="thSaleTotal">বিক্রি মূল্য (৳)</th>
+                <th class="py-3 px-4" data-i18n="thSaleCost">আনুমানিক খরচ</th>
+                <th class="py-3 px-4" data-i18n="thSaleProfit">লাভ (৳)</th>
+                <th class="py-3 px-4 text-right" data-i18n="thActions">অ্যাকশন</th>
+              </tr>
+            </thead>
+            <tbody id="sales-table-body" class="divide-y divide-gray-100 dark:divide-slate-800 text-xs">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 5: EMPLOYEES -->
+    <!-- ========================================================================= -->
+    <div id="tab-employees" class="tab-pane space-y-4">
+      
+      <!-- Top Header Card -->
+      <div class="bg-white dark:bg-[#122017] p-4 rounded-2xl border border-gray-200/80 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <h2 class="font-heading font-extrabold text-xl text-gray-900 dark:text-gray-100" data-i18n="employeesTitle">
+            কর্মচারীদের তথ্য ও বেতন তালিকা
+          </h2>
+          <p class="text-xs text-gray-500 dark:text-gray-400" data-i18n="employeesSubtitle">
+            কিচেন শেফ, সহকারী, ডেলিভারি স্টাফদের বিস্তারিত ও মাসিক বেতন
+          </p>
+        </div>
+
+        <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+          <div class="px-4 py-2 rounded-xl bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-900/40 text-brand-800 dark:text-brand-300">
+            <span class="text-[10px] font-bold uppercase block" data-i18n="totalPayrollLabel">মাসিক মোট বেতন</span>
+            <span id="payroll-total-amount" class="text-lg font-extrabold font-heading">৳0</span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button 
+              onclick="window.hsApp.postPayrollPrompt()"
+              class="px-3.5 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-800 dark:text-gray-200 font-bold text-xs transition-all border border-gray-200 dark:border-slate-700 flex items-center gap-1.5"
+              title="Post salary to monthly expenses sheet"
+            >
+              <i class="fa-solid fa-money-check-dollar text-brand-600"></i>
+              <span data-i18n="btnRecordPayrollExpense">বেতন খরচে যুক্ত করুন</span>
+            </button>
+            <button 
+              onclick="window.hsApp.openAddEmployeeModal()"
+              class="px-4 py-2.5 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-bold text-xs sm:text-sm transition-all shadow-sm flex items-center gap-2"
+            >
+              <i class="fa-solid fa-user-plus"></i> <span data-i18n="btnAddEmployee">নতুন স্টাফ</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Employees Table -->
+      <div class="bg-white dark:bg-[#122017] rounded-2xl border border-gray-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-50/80 dark:bg-slate-800/60 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th class="py-3 px-4" data-i18n="thEmpName">কর্মচারীর নাম</th>
+                <th class="py-3 px-4" data-i18n="thEmpRole">পদবি / দায়িত্ব</th>
+                <th class="py-3 px-4" data-i18n="thEmpPhone">মোবাইল নম্বর</th>
+                <th class="py-3 px-4" data-i18n="thEmpSalary">মাসিক বেতন (৳)</th>
+                <th class="py-3 px-4" data-i18n="thEmpJoinDate">যোগদানের তারিখ</th>
+                <th class="py-3 px-4" data-i18n="thEmpStatus">অবস্থা</th>
+                <th class="py-3 px-4 text-right" data-i18n="thActions">অ্যাকশন</th>
+              </tr>
+            </thead>
+            <tbody id="employees-table-body" class="divide-y divide-gray-100 dark:divide-slate-800 text-xs">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 6: MONTHLY REPORTS & IMPORT/EXPORT -->
+    <!-- ========================================================================= -->
+    <div id="tab-reports" class="tab-pane space-y-6">
+      
+      <!-- Executive Report for Owner Card -->
+      <div class="bg-gradient-to-br from-brand-900 to-brand-950 text-white p-6 sm:p-8 rounded-3xl shadow-xl relative overflow-hidden">
+        <div class="relative z-10 max-w-2xl">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-800/80 border border-brand-700/60 text-brand-200 text-xs font-bold mb-3">
+            <i class="fa-solid fa-file-pdf"></i> Official Monthly Statement
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-heading font-extrabold tracking-tight" data-i18n="monthlyReportCardTitle">
+            মালিকের জন্য মাসিক পূর্ণাঙ্গ রিপোর্ট
+          </h2>
+          <p class="text-brand-200 text-xs sm:text-sm mt-2 leading-relaxed" data-i18n="monthlyReportCardSub">
+            আয়, ব্যয়, নিট লাভ এবং বর্তমান স্টকের পূর্ণ বিবরণী সম্বলিত প্রফেশনাল পিডিএফ ডাউনলোড করুন।
+          </p>
+
+          <div class="flex flex-wrap items-center gap-3 mt-6">
+            <button 
+              onclick="window.hsReports.generateMonthlyPDF(window.hsStore.selectedMonthFilter, window.hsStore.selectedYearFilter)"
+              class="px-5 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-brand-950 font-heading font-extrabold text-sm transition-all shadow-lg flex items-center gap-2.5"
+            >
+              <i class="fa-solid fa-file-pdf text-lg"></i> <span data-i18n="btnDownloadPDF">PDF রিপোর্ট ডাউনলোড</span>
+            </button>
+            <button 
+              onclick="window.hsReports.exportExpensesCSV(window.hsStore.selectedMonthFilter, window.hsStore.selectedYearFilter)"
+              class="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all border border-white/20 flex items-center gap-2"
+            >
+              <i class="fa-solid fa-file-csv text-emerald-400"></i> Expenses CSV
+            </button>
+            <button 
+              onclick="window.hsReports.exportSalesCSV(window.hsStore.selectedMonthFilter, window.hsStore.selectedYearFilter)"
+              class="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all border border-white/20 flex items-center gap-2"
+            >
+              <i class="fa-solid fa-file-csv text-teal-400"></i> Sales CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="absolute -right-10 -bottom-10 opacity-10 pointer-events-none">
+          <i class="fa-solid fa-file-invoice text-[240px]"></i>
+        </div>
+      </div>
+
+      <!-- Preview Summary of Selected Month -->
+      <div class="bg-white dark:bg-[#122017] p-6 rounded-2xl border border-gray-200/80 dark:border-slate-800 shadow-sm">
+        <h3 class="font-heading font-bold text-base text-gray-800 dark:text-gray-100 mb-4">
+          নির্বাচিত মাসের সারসংক্ষেপ প্রিভিউ
+        </h3>
+        <div id="report-preview-summary">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <!-- Data Safety & Full Backup (JSON) Section -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- JSON Full Backup Download Card -->
+        <div class="bg-white dark:bg-[#122017] p-5 rounded-2xl border border-gray-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 flex items-center justify-center text-sm mb-3">
+              <i class="fa-solid fa-cloud-arrow-down"></i>
+            </div>
+            <h4 class="font-heading font-bold text-base text-gray-800 dark:text-gray-100" data-i18n="btnExportJSON">
+              সম্পূর্ণ ব্যাকআপ (JSON) ডাউনলোড
+            </h4>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed" data-i18n="dataSafetyNotice">
+              সকল তথ্য আপনার ডিভাইসেই সুরক্ষিত থাকে। প্রতি মাস শেষে একটি JSON ব্যাকআপ ডাউনলোড করে রাখা উত্তম।
+            </p>
+          </div>
+          <button 
+            onclick="window.hsReports.exportFullBackupJSON()"
+            class="mt-5 w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2"
+          >
+            <i class="fa-solid fa-download"></i> <span data-i18n="btnExportJSON">JSON ব্যাকআপ ডাউনলোড</span>
+          </button>
+        </div>
+
+        <!-- Restore / Upload Backup Card -->
+        <div class="bg-white dark:bg-[#122017] p-5 rounded-2xl border border-gray-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 flex items-center justify-center text-sm mb-3">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+            </div>
+            <h4 class="font-heading font-bold text-base text-gray-800 dark:text-gray-100" data-i18n="btnImportBackup">
+              ডাটা রিস্টোর / আপলোড
+            </h4>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
+              পূর্বে ডাউনলোড করা কোনো JSON ব্যাকআপ ফাইল থাকলে তা আপলোড করে সাথে সাথে পূর্বের ডাটা ফিরিয়ে আনুন।
+            </p>
+          </div>
+          <button 
+            onclick="window.hsApp.openImportModal()"
+            class="mt-5 w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2"
+          >
+            <i class="fa-solid fa-upload"></i> <span data-i18n="btnImportBackup">ফাইল আপলোড করুন</span>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="bg-white dark:bg-[#0c160f] border-t border-gray-200 dark:border-slate-800 py-6 text-center text-xs text-gray-500 dark:text-gray-400 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span data-i18n="liveStatus">সচল ও নিরাপদ ডাটা (GitHub Pages Ready)</span>
+      </div>
+      <div>
+        Health Shark © 2026 • Mirpur, Dhaka • Hotline: <a href="tel:+8801789474381" class="font-semibold text-brand-700 hover:underline">01789-474381</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: ADD / EDIT STOCK ITEM -->
+  <!-- ========================================================================= -->
+  <div id="modal-stock" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#122017] rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-gray-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-slate-800">
+        <h3 id="modal-stock-title" class="font-heading font-extrabold text-lg text-gray-900 dark:text-gray-100">
+          নতুন পণ্য / কাঁচামাল যুক্ত করুন
+        </h3>
+        <button onclick="window.hsApp.closeModal('modal-stock')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-800 text-gray-500 flex items-center justify-center hover:bg-gray-200">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="stock-form" class="space-y-4 mt-4">
+        <input type="hidden" id="stock-item-id" />
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelItemName">পণ্যের নাম</label>
+          <input type="text" id="stock-item-name" required placeholder="e.g. Chicken Broiler / পোলাও চাল" class="w-full px-3.5 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelCategory">ক্যাটাগরি</label>
+            <select id="stock-item-category" class="w-full px-3.5 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200">
+              <option value="catRaw">কাঁচামাল (Raw)</option>
+              <option value="catMeals">প্রি-অর্ডার মিল (Meals)</option>
+              <option value="catBurgers">বার্গার ও স্যান্ডউইচ</option>
+              <option value="catSnacks">স্ন্যাকস ও মোমো</option>
+              <option value="catDesserts">মিষ্টান্ন ও ব্রাউনি</option>
+              <option value="catPackaging">বক্স ও প্যাকেজিং</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelItemType">পণ্যের ধরণ</label>
+            <select id="stock-item-type" class="w-full px-3.5 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200">
+              <option value="typeRaw">কাঁচামাল (Raw Material)</option>
+              <option value="typeFinished">তৈরি খাবার (Finished Menu)</option>
+              <option value="typePackaging">প্যাকেজিং বক্স বা ব্যাগ</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelUnit">একক</label>
+            <select id="stock-item-unit" class="w-full px-3.5 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200">
+              <option value="unitKg">কেজি (kg)</option>
+              <option value="unitGm">গ্রাম (gm)</option>
+              <option value="unitLitre">লিটার (litre)</option>
+              <option value="unitPcs">পিস (pcs)</option>
+              <option value="unitPacket">প্যাকেট (packet)</option>
+              <option value="unitBox">বক্স (box)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelCurrentQty">বর্তমান স্টক</label>
+            <input type="number" id="stock-item-qty" required min="0" step="any" placeholder="0" class="w-full px-3.5 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelThreshold">সতর্কতা সীমা</label>
+            <input type="number" id="stock-item-threshold" required min="0" step="any" placeholder="5" class="w-full px-3.5 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelUnitCost">ক্রয়মূল্য (৳)</label>
+            <input type="number" id="stock-item-cost" required min="0" step="any" placeholder="৳" class="w-full px-3.5 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelSellingPrice">বিক্রয়মূল্য (৳ - ঐচ্ছিক)</label>
+            <input type="number" id="stock-item-sell" min="0" step="any" placeholder="৳" class="w-full px-3.5 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200" />
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-100 dark:border-slate-800">
+          <button type="button" onclick="window.hsApp.closeModal('modal-stock')" class="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800" data-i18n="btnCancel">বাতিল</button>
+          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold bg-brand-700 hover:bg-brand-800 text-white shadow-sm" data-i18n="btnSave">সংরক্ষণ করুন</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: QUICK STOCK IN / OUT -->
+  <!-- ========================================================================= -->
+  <div id="modal-quick-stock" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#122017] rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-200 dark:border-slate-800">
+      <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-slate-800">
+        <div>
+          <h3 id="quick-stock-title" class="font-heading font-extrabold text-base text-gray-900 dark:text-gray-100">
+            স্টক পরিবর্তন
+          </h3>
+          <p id="quick-stock-item-name" class="text-xs font-bold text-brand-700 dark:text-brand-400 mt-0.5"></p>
+        </div>
+        <button onclick="window.hsApp.closeModal('modal-quick-stock')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-800 text-gray-500 flex items-center justify-center hover:bg-gray-200">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="quick-stock-form" class="space-y-4 mt-4">
+        <input type="hidden" id="quick-stock-item-id" />
+
+        <div class="p-3 bg-gray-50 dark:bg-slate-800/60 rounded-xl text-xs flex justify-between">
+          <span class="text-gray-500">বর্তমান পরিমাণ:</span>
+          <span id="quick-stock-current-qty" class="font-extrabold text-gray-800 dark:text-gray-100"></span>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">অ্যাকশন টাইপ</label>
+          <select id="quick-stock-direction" class="w-full px-3.5 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200">
+            <option value="1">স্টক যোগ করুন (+ মাল ক্রয় / বৃদ্ধি)</option>
+            <option value="-1">স্টক কমান (- রান্না / বিক্রি / অপচয়)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelQuantityToChange">পরিমাণ</label>
+          <input type="number" id="quick-stock-qty" required min="0.1" step="any" placeholder="পরিমাণ দিন" class="w-full px-3.5 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelReasonNote">কারণ বা বিবরণ</label>
+          <input type="text" id="quick-stock-reason" placeholder="e.g. নতুন কেনা / দৈনিক রান্না / অপচয়" class="w-full px-3.5 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200" />
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-100 dark:border-slate-800">
+          <button type="button" onclick="window.hsApp.closeModal('modal-quick-stock')" class="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-400" data-i18n="btnCancel">বাতিল</button>
+          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold bg-brand-700 hover:bg-brand-800 text-white shadow-sm" data-i18n="btnConfirm">নিশ্চিত করুন</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: ADD EXPENSE -->
+  <!-- ========================================================================= -->
+  <div id="modal-expense" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#122017] rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-200 dark:border-slate-800">
+      <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-slate-800">
+        <h3 class="font-heading font-extrabold text-base text-gray-900 dark:text-gray-100" data-i18n="modalAddExpenseTitle">
+          খরচ বা ব্যয়ের এন্ট্রি
+        </h3>
+        <button onclick="window.hsApp.closeModal('modal-expense')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-800 text-gray-500 flex items-center justify-center hover:bg-gray-200">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="expense-form" class="space-y-4 mt-4">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelExpenseDate">তারিখ</label>
+            <input type="date" id="expense-date" required class="w-full px-3 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelExpenseCategory">ক্যাটাগরি</label>
+            <select id="expense-category" class="w-full px-3 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200">
+              <option value="expRawBazaar">কাঁচামাল ও বাজার</option>
+              <option value="expUtility">গ্যাস ও বিদ্যুৎ বিল</option>
+              <option value="expRent">দোকান বা কিচেন ভাড়া</option>
+              <option value="expPackaging">বক্স ও প্যাকেজিং</option>
+              <option value="expDelivery">ডেলিভারি খরচ</option>
+              <option value="expPayroll">স্টাফ বেতন ও চা-নাস্তা</option>
+              <option value="expEquipment">যন্ত্রপাতি ও মেরামত</option>
+              <option value="expMisc">অন্যান্য বিবিধ</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelExpenseTitle">খরচের বিবরণ / কারণ</label>
+          <input type="text" id="expense-title" required placeholder="e.g. মুরগি ও চাল কেনা / গ্যাস সিলিন্ডার" class="w-full px-3.5 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelExpenseAmount">টাকার পরিমাণ (৳)</label>
+            <input type="number" id="expense-amount" required min="1" placeholder="৳" class="w-full px-3.5 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelExpenseMethod">পেমেন্ট মাধ্যম</label>
+            <select id="expense-method" class="w-full px-3 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200">
+              <option value="payCash">ক্যাশ (Cash)</option>
+              <option value="payBkash">বিকাশ (bKash)</option>
+              <option value="payNagad">নগদ (Nagad)</option>
+              <option value="payBank">ব্যাংক (Bank)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelExpenseVendor">কাকে দেওয়া হলো / দোকান</label>
+          <input type="text" id="expense-vendor" placeholder="e.g. কাপ্তান বাজার / যমুনা গ্যাস" class="w-full px-3.5 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200" />
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-100 dark:border-slate-800">
+          <button type="button" onclick="window.hsApp.closeModal('modal-expense')" class="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-400" data-i18n="btnCancel">বাতিল</button>
+          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm" data-i18n="btnSave">সংরক্ষণ করুন</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: ADD SALE -->
+  <!-- ========================================================================= -->
+  <div id="modal-sale" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#122017] rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-200 dark:border-slate-800">
+      <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-slate-800">
+        <h3 class="font-heading font-extrabold text-base text-gray-900 dark:text-gray-100" data-i18n="modalAddSaleTitle">
+          বিক্রির হিসাব এন্ট্রি
+        </h3>
+        <button onclick="window.hsApp.closeModal('modal-sale')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-800 text-gray-500 flex items-center justify-center hover:bg-gray-200">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="sale-form" class="space-y-4 mt-4">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelSaleDate">তারিখ</label>
+          <input type="date" id="sale-date" required class="w-full px-3 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelSaleItem">মেনুর খাবার নির্বাচন</label>
+          <select id="sale-food-select" class="w-full px-3 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200">
+            <!-- Dynamically populated from finished food items -->
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelSaleQty">পরিমাণ (সংখ্যা)</label>
+            <input type="number" id="sale-qty" required min="1" value="1" class="w-full px-3.5 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelSaleAmount">মোট বিক্রি টাকা (৳)</label>
+            <input type="number" id="sale-total" required min="1" placeholder="৳" class="w-full px-3.5 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">আনুমানিক খরচ (৳)</label>
+            <input type="number" id="sale-cost" min="0" placeholder="৳" class="w-full px-3.5 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelSalePaymentMethod">পেমেন্ট মাধ্যম</label>
+            <select id="sale-method" class="w-full px-3 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200">
+              <option value="payCash">ক্যাশ (Cash)</option>
+              <option value="payBkash">বিকাশ (bKash)</option>
+              <option value="payNagad">নগদ (Nagad)</option>
+              <option value="payBank">ব্যাংক (Bank)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-100 dark:border-slate-800">
+          <button type="button" onclick="window.hsApp.closeModal('modal-sale')" class="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-400" data-i18n="btnCancel">বাতিল</button>
+          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold bg-brand-700 hover:bg-brand-800 text-white shadow-sm" data-i18n="btnSave">সংরক্ষণ করুন</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: ADD / EDIT EMPLOYEE -->
+  <!-- ========================================================================= -->
+  <div id="modal-employee" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#122017] rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-200 dark:border-slate-800">
+      <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-slate-800">
+        <h3 id="modal-emp-title" class="font-heading font-extrabold text-base text-gray-900 dark:text-gray-100">
+          কর্মচারীর তথ্য
+        </h3>
+        <button onclick="window.hsApp.closeModal('modal-employee')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-800 text-gray-500 flex items-center justify-center hover:bg-gray-200">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="employee-form" class="space-y-4 mt-4">
+        <input type="hidden" id="emp-id" />
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelStaffName">পূর্ণ নাম</label>
+          <input type="text" id="emp-name" required placeholder="e.g. মোঃ রফিকুল ইসলাম" class="w-full px-3.5 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelStaffRole">পদবি / দায়িত্ব</label>
+          <input type="text" id="emp-role" required placeholder="e.g. প্রধান শেফ / কিচেন সহকারী / রাইডার" class="w-full px-3.5 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelStaffPhone">মোবাইল নম্বর</label>
+            <input type="tel" id="emp-phone" placeholder="01XXXXXXXXX" class="w-full px-3.5 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelStaffSalary">মাসিক বেতন (৳)</label>
+            <input type="number" id="emp-salary" required min="0" placeholder="৳" class="w-full px-3.5 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelStaffJoinDate">যোগদানের তারিখ</label>
+            <input type="date" id="emp-joindate" class="w-full px-3 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="labelStaffStatus">অবস্থা</label>
+            <select id="emp-status" class="w-full px-3 py-2 rounded-xl text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200">
+              <option value="statusActive">কর্মরত (Active)</option>
+              <option value="statusLeave">ছুটিতে (On Leave)</option>
+              <option value="statusResigned">অব্যাহতি প্রাপ্ত (Resigned)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-100 dark:border-slate-800">
+          <button type="button" onclick="window.hsApp.closeModal('modal-employee')" class="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-400" data-i18n="btnCancel">বাতিল</button>
+          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold bg-brand-700 hover:bg-brand-800 text-white shadow-sm" data-i18n="btnSave">সংরক্ষণ করুন</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: IMPORT / RESTORE BACKUP -->
+  <!-- ========================================================================= -->
+  <div id="modal-import" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#122017] rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-200 dark:border-slate-800">
+      <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-slate-800">
+        <h3 class="font-heading font-extrabold text-base text-gray-900 dark:text-gray-100" data-i18n="modalImportTitle">
+          ডাটা রিস্টোর বা ব্যাকআপ আপলোড
+        </h3>
+        <button onclick="window.hsApp.closeModal('modal-import')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-800 text-gray-500 flex items-center justify-center hover:bg-gray-200">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4 mt-4">
+        <div class="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/40 rounded-xl text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+          <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+          সতর্কতা: ব্যাকআপ ফাইল আপলোড করলে আপনার বর্তমান ডাটার ওপর ব্যাকআপের ডাটা প্রতিস্থাপিত হবে।
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">JSON ফাইল নির্বাচন করুন (.json)</label>
+          <input type="file" id="import-file-input" accept=".json" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100" />
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-100 dark:border-slate-800">
+          <button type="button" onclick="window.hsApp.closeModal('modal-import')" class="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-400" data-i18n="btnCancel">বাতিল</button>
+          <button type="button" onclick="window.hsApp.handleImportFile()" class="px-5 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white shadow-sm" data-i18n="btnConfirm">রিস্টোর নিশ্চিত করুন</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Application Logic Scripts -->
+  <script src="assets/js/seed.js"></script>
+  <script src="assets/js/i18n.js"></script>
+  <script src="assets/js/store.js"></script>
+  <script src="assets/js/reports.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

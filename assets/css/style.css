@@ -1,0 +1,125 @@
+/* Health Shark Stock & Management System - Custom Styles */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=Hind+Siliguri:wght@400;500;600;700&display=swap');
+
+:root {
+  --brand-primary: #15803d;
+  --brand-dark: #14532d;
+  --brand-light: #22c55e;
+  --brand-accent: #eab308;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.font-heading {
+  font-family: 'Outfit', 'Hind Siliguri', sans-serif;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Glassmorphism Card Style */
+.hs-glass-card {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Badge Glow Effects */
+.glow-success {
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.25);
+}
+
+.glow-warning {
+  box-shadow: 0 0 15px rgba(234, 179, 8, 0.25);
+}
+
+.glow-danger {
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.25);
+}
+
+/* Subtle Table Row Hover */
+.table-hover-row:hover {
+  background-color: rgba(34, 197, 94, 0.04);
+}
+
+.dark .table-hover-row:hover {
+  background-color: rgba(34, 197, 94, 0.08);
+}
+
+/* Pulse animation for urgent stock alerts */
+@keyframes urgent-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.03);
+    opacity: 0.9;
+  }
+}
+
+.animate-urgent {
+  animation: urgent-pulse 2s infinite ease-in-out;
+}
+
+/* Smooth Tab Fade Transitions */
+.tab-pane {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.tab-pane.active {
+  display: block;
+  opacity: 1;
+}
+
+/* Custom Focus Ring */
+input:focus, select:focus, textarea:focus, button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.35);
+}
+
+/* Print Stylesheet for clean physical printing */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .no-print, header, nav, #mobile-drawer, .btn-action, #toast-container {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .tab-pane {
+    display: block !important;
+    opacity: 1 !important;
+  }
+  .hs-card {
+    box-shadow: none !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+}
