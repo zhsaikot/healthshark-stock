@@ -90,17 +90,19 @@ class DataStore {
   }
 
   saveItem(item) {
+    item.updatedAt = new Date().toISOString().split("T")[0];
     if (!item.id) {
       item.id = "item-" + Date.now();
-      item.updatedAt = new Date().toISOString().split("T")[0];
       this.data.items.push(item);
       this.addActivity(`Added new inventory item: ${item.name}`, "stock");
     } else {
       const idx = this.data.items.findIndex((i) => i.id === item.id);
       if (idx !== -1) {
-        item.updatedAt = new Date().toISOString().split("T")[0];
         this.data.items[idx] = { ...this.data.items[idx], ...item };
         this.addActivity(`Updated item: ${item.name}`, "stock");
+      } else {
+        this.data.items.push(item);
+        this.addActivity(`Added new inventory item: ${item.name}`, "stock");
       }
     }
     this.save();
@@ -153,7 +155,12 @@ class DataStore {
       this.addActivity(`Recorded expense: ৳${expense.amount} for ${expense.title}`, "expense");
     } else {
       const idx = this.data.expenses.findIndex((e) => e.id === expense.id);
-      if (idx !== -1) this.data.expenses[idx] = { ...this.data.expenses[idx], ...expense };
+      if (idx !== -1) {
+        this.data.expenses[idx] = { ...this.data.expenses[idx], ...expense };
+      } else {
+        this.data.expenses.push(expense);
+        this.addActivity(`Recorded expense: ৳${expense.amount} for ${expense.title}`, "expense");
+      }
     }
     this.save();
     return expense;
@@ -185,7 +192,12 @@ class DataStore {
       this.addActivity(`Recorded sale: ৳${sale.total} (${sale.item})`, "sale");
     } else {
       const idx = this.data.sales.findIndex((s) => s.id === sale.id);
-      if (idx !== -1) this.data.sales[idx] = { ...this.data.sales[idx], ...sale };
+      if (idx !== -1) {
+        this.data.sales[idx] = { ...this.data.sales[idx], ...sale };
+      } else {
+        this.data.sales.push(sale);
+        this.addActivity(`Recorded sale: ৳${sale.total} (${sale.item})`, "sale");
+      }
     }
     this.save();
     return sale;
@@ -208,7 +220,12 @@ class DataStore {
       this.addActivity(`Added staff member: ${emp.name}`, "info");
     } else {
       const idx = this.data.employees.findIndex((e) => e.id === emp.id);
-      if (idx !== -1) this.data.employees[idx] = { ...this.data.employees[idx], ...emp };
+      if (idx !== -1) {
+        this.data.employees[idx] = { ...this.data.employees[idx], ...emp };
+      } else {
+        this.data.employees.push(emp);
+        this.addActivity(`Added staff member: ${emp.name}`, "info");
+      }
     }
     this.save();
     return emp;
@@ -219,17 +236,35 @@ class DataStore {
     this.save();
   }
 
-  postPayrollToExpenses(monthName, year) {
+  postPayrollToExpenses(monthFilter = "all", year = new Date().getFullYear()) {
     const activeStaff = this.getEmployees().filter((e) => e.status !== "statusResigned");
     const totalSalary = activeStaff.reduce((sum, e) => sum + (Number(e.salary) || 0), 0);
     if (totalSalary <= 0) return 0;
 
-    const today = new Date().toISOString().split("T")[0];
+    let targetDate = new Date().toISOString().split("T")[0];
+    let monthLabel = "";
+
+    const yNum = Number(year) || new Date().getFullYear();
+    if (monthFilter !== "all") {
+      const mIdx = Number(monthFilter);
+      monthLabel = window.hsI18n ? window.hsI18n.getMonthName(mIdx) : `Month ${mIdx + 1}`;
+      const now = new Date();
+      if (now.getMonth() === mIdx && now.getFullYear() === yNum) {
+        targetDate = now.toISOString().split("T")[0];
+      } else {
+        // Target last day or 1st day of chosen month
+        targetDate = `${yNum}-${String(mIdx + 1).padStart(2, "0")}-28`;
+      }
+    } else {
+      const curM = new Date().getMonth();
+      monthLabel = window.hsI18n ? window.hsI18n.getMonthName(curM) : "Current Month";
+    }
+
     const payrollExpense = {
       id: "exp-payroll-" + Date.now(),
-      date: today,
+      date: targetDate,
       category: "expPayroll",
-      title: `Monthly Staff Salary Payroll (${monthName} ${year})`,
+      title: `Monthly Staff Salary Payroll (${monthLabel} ${yNum})`,
       vendor: `Health Shark Team (${activeStaff.length} Employees)`,
       method: "payBank",
       amount: totalSalary

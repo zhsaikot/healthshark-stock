@@ -1599,15 +1599,28 @@ class HealthSharkApp {
   }
 
   postPayrollPrompt() {
+    const activeStaff = window.hsStore.getEmployees().filter((e) => e.status !== "statusResigned");
+    const totalSalary = activeStaff.reduce((sum, e) => sum + (Number(e.salary) || 0), 0);
+
+    if (totalSalary <= 0) {
+      alert(window.hsI18n.getLang() === "bn" ? "কোনো সক্রিয় কর্মচারীর বেতন পাওয়া যায়নি।" : "No active employees with valid salary found.");
+      return;
+    }
+
     const m = window.hsStore.selectedMonthFilter;
     const y = window.hsStore.selectedYearFilter;
-    const monthName = m === "all" ? window.hsI18n.t("allMonths") : window.hsI18n.getMonthName(Number(m));
+    const monthName = m === "all" ? (window.hsI18n.getLang() === "bn" ? "চলতি" : "Current Month") : window.hsI18n.getMonthName(Number(m));
 
-    const totalPosted = window.hsStore.postPayrollToExpenses(monthName, y);
+    const confirmMsg = window.hsI18n.getLang() === "bn"
+      ? `${monthName} ${y} মাসের মোট কর্মচারীদের বেতন (৳${totalSalary.toLocaleString()}) কি খরচের তালিকায় যুক্ত করতে চান?`
+      : `Do you want to post total payroll expense (৳${totalSalary.toLocaleString()}) for ${monthName} ${y} into Expenses?`;
+
+    if (!confirm(confirmMsg)) return;
+
+    const totalPosted = window.hsStore.postPayrollToExpenses(m, y);
     if (totalPosted > 0) {
       this.showToast(`${window.hsI18n.t("payrollPostedSuccess")} (৳${totalPosted.toLocaleString()})`);
-    } else {
-      alert("No active employees with valid salary found.");
+      this.renderAll();
     }
   }
 
