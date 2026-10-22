@@ -47,132 +47,253 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
-<body class="bg-[#f8faf8] dark:bg-[#0b130e] text-gray-800 dark:text-gray-100 min-h-screen flex flex-col antialiased">
+<body class="bg-[#f8faf8] dark:bg-[#0b130e] text-gray-800 dark:text-gray-100 min-h-screen flex antialiased">
 
-  <!-- ==================== TOP NAVIGATION BAR ==================== -->
-  <header class="sticky top-0 z-40 bg-white/95 dark:bg-[#0f1b13]/95 backdrop-blur-md border-b border-gray-200/80 dark:border-slate-800 shadow-sm transition-colors">
-    <div class="max-w-[96%] mx-auto px-2 sm:px-4">
-      <div class="flex items-center justify-between h-20 sm:h-24">
-        
-        <!-- Left: Logo & Branding -->
-        <div class="flex items-center gap-3.5">
-          <img src="assets/images/logo.png" alt="Health Shark Logo" class="h-14 sm:h-16 w-auto object-contain transition-transform hover:scale-105" />
-          <div>
-            <h1 class="font-heading font-extrabold text-2xl sm:text-3xl text-brand-900 dark:text-brand-300 tracking-tight leading-tight" data-i18n="brandName">
-              Health Shark
-            </h1>
-            <p class="text-xs sm:text-sm font-semibold text-brand-700 dark:text-brand-400 uppercase tracking-wider" data-i18n="brandSubtitle">
-              Stock & Business Management
-            </p>
-          </div>
+  <!-- ==================== MOBILE SIDEBAR BACKDROP ==================== -->
+  <div id="sidebar-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden transition-opacity duration-300"></div>
+
+  <!-- ==================== COLLAPSIBLE LEFT SIDEBAR ==================== -->
+  <aside 
+    id="app-sidebar" 
+    class="fixed lg:sticky top-0 inset-y-0 left-0 z-50 h-screen w-64 shrink-0 bg-white dark:bg-[#0c160f] border-r border-gray-200/80 dark:border-slate-800 flex flex-col shadow-xl lg:shadow-none -translate-x-full lg:translate-x-0 transition-all duration-300 ease-in-out select-none"
+  >
+    <!-- Brand / Header of Sidebar -->
+    <div class="h-20 sm:h-24 px-4 flex items-center justify-between border-b border-gray-100 dark:border-slate-800/80">
+      <div class="flex items-center gap-3 overflow-hidden">
+        <img src="assets/images/logo.png" alt="Health Shark Logo" class="h-11 w-11 shrink-0 object-contain" />
+        <div class="sidebar-label transition-opacity duration-200 min-w-0">
+          <h1 class="font-heading font-extrabold text-xl text-brand-900 dark:text-brand-300 tracking-tight leading-tight truncate" data-i18n="brandName">
+            Health Shark
+          </h1>
+          <p class="text-[11px] font-bold text-brand-700 dark:text-brand-400 uppercase tracking-wider truncate" data-i18n="brandSubtitle">
+            Stock Management
+          </p>
         </div>
-
-        <!-- Center: Month & Year Selector Filter -->
-        <div class="hidden md:flex items-center gap-2.5 bg-gray-100 dark:bg-slate-800/80 p-2 sm:p-2.5 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm">
-          <i class="fa-solid fa-calendar-days text-brand-700 dark:text-brand-400 pl-2 text-sm"></i>
-          <select id="filter-month-select" class="bg-transparent text-sm font-extrabold text-gray-700 dark:text-gray-200 border-0 cursor-pointer focus:ring-0">
-            <option value="all">All Months</option>
-            <option value="0">January</option>
-            <option value="1">February</option>
-            <option value="2">March</option>
-            <option value="3">April</option>
-            <option value="4">May</option>
-            <option value="5">June</option>
-            <option value="6">July</option>
-            <option value="7">August</option>
-            <option value="8">September</option>
-            <option value="9">October</option>
-            <option value="10">November</option>
-            <option value="11">December</option>
-          </select>
-          <span class="text-gray-300 dark:text-gray-600">|</span>
-          <select id="filter-year-select" class="bg-transparent text-sm font-extrabold text-gray-700 dark:text-gray-200 border-0 cursor-pointer focus:ring-0 pr-2">
-            <!-- Dynamically populated -->
-          </select>
-        </div>
-
-        <!-- Right: Language Pill, Theme Switch, Mobile Button -->
-        <div class="flex items-center gap-3">
-          <!-- Language Toggle (EN | বাংলা) -->
-          <div class="inline-flex items-center bg-gray-100 dark:bg-slate-800 p-1.5 rounded-full border border-gray-200 dark:border-slate-700 text-xs sm:text-sm font-bold">
-            <button id="lang-btn-en" type="button" class="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all bg-brand-700 text-white shadow-sm">
-              EN
-            </button>
-            <button id="lang-btn-bn" type="button" class="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all text-gray-600 dark:text-gray-300 hover:text-brand-700">
-              বাংলা
-            </button>
-          </div>
-
-          <!-- Dark / Light Mode Toggle -->
-          <button 
-            id="theme-toggle-btn"
-            type="button" 
-            title="Toggle Dark / Light Theme"
-            class="w-11 h-11 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center transition-colors border border-gray-200 dark:border-slate-700 shadow-sm"
-          >
-            <i id="theme-icon" class="fa-solid fa-moon text-gray-600 dark:text-amber-400 text-base"></i>
-          </button>
-
-          <!-- Mobile Menu Hamburger -->
-          <button 
-            id="mobile-menu-btn"
-            type="button" 
-            class="md:hidden w-11 h-11 rounded-2xl bg-gray-100 dark:bg-slate-800 flex items-center justify-center text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-slate-700"
-          >
-            <i class="fa-solid fa-bars text-lg"></i>
-          </button>
-        </div>
-
       </div>
+      <!-- Desktop Collapse Button -->
+      <button 
+        id="sidebar-toggle-btn"
+        type="button" 
+        title="Toggle Sidebar"
+        class="hidden lg:flex w-9 h-9 rounded-xl items-center justify-center text-gray-500 hover:text-brand-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-slate-800 transition-colors shrink-0"
+      >
+        <i id="sidebar-toggle-icon" class="fa-solid fa-angles-left text-sm transition-transform duration-300"></i>
+      </button>
+      <!-- Mobile Close Button -->
+      <button 
+        id="sidebar-close-mobile"
+        type="button"
+        class="lg:hidden w-9 h-9 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-slate-800"
+      >
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
 
-      <!-- Mobile Month Picker Row -->
-      <div class="md:hidden pb-3 flex items-center gap-2">
-        <div class="flex-1 flex items-center gap-2 bg-gray-100 dark:bg-slate-800 p-2 rounded-xl text-xs font-bold">
-          <i class="fa-solid fa-calendar-days text-brand-700 text-xs"></i>
-          <select id="filter-month-select-mobile" onchange="document.getElementById('filter-month-select').value=this.value; document.getElementById('filter-month-select').dispatchEvent(new Event('change'))" class="bg-transparent flex-1 border-0 text-xs">
-            <option value="all">All Months</option>
-            <option value="0">January</option>
-            <option value="1">February</option>
-            <option value="2">March</option>
-            <option value="3">April</option>
-            <option value="4">May</option>
-            <option value="5">June</option>
-            <option value="6">July</option>
-            <option value="7">August</option>
-            <option value="8">September</option>
-            <option value="9">October</option>
-            <option value="10">November</option>
-            <option value="11">December</option>
-          </select>
+    <!-- Navigation Menu Items -->
+    <div class="flex-1 py-4 px-3 space-y-2 overflow-y-auto overflow-x-hidden">
+      <!-- 1. Dashboard -->
+      <button 
+        data-tab="dashboard" 
+        class="nav-link group relative w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl font-extrabold text-sm transition-all duration-200 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-slate-800/80 text-left"
+        title="Dashboard"
+      >
+        <i class="fa-solid fa-chart-pie w-6 text-center text-lg text-emerald-600 dark:text-emerald-400 shrink-0"></i>
+        <span class="sidebar-label whitespace-nowrap" data-i18n="navDashboard">ড্যাশবোর্ড</span>
+        <span class="sidebar-tooltip hidden group-hover:block absolute left-full ml-3 px-3 py-1.5 bg-gray-900 text-white text-xs font-bold rounded-xl whitespace-nowrap shadow-xl z-50 pointer-events-none" data-i18n="navDashboard">
+          ড্যাশবোর্ড
+        </span>
+      </button>
+
+      <!-- 2. Stock Inventory -->
+      <button 
+        data-tab="stock" 
+        class="nav-link group relative w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl font-extrabold text-sm transition-all duration-200 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-slate-800/80 text-left"
+        title="Stock Inventory"
+      >
+        <i class="fa-solid fa-boxes-stacked w-6 text-center text-lg text-amber-500 shrink-0"></i>
+        <span class="sidebar-label whitespace-nowrap" data-i18n="navStock">স্টক ইনভেন্টরি</span>
+        <span class="sidebar-tooltip hidden group-hover:block absolute left-full ml-3 px-3 py-1.5 bg-gray-900 text-white text-xs font-bold rounded-xl whitespace-nowrap shadow-xl z-50 pointer-events-none" data-i18n="navStock">
+          স্টক ইনভেন্টরি
+        </span>
+      </button>
+
+      <!-- 3. Costing & Expenses -->
+      <button 
+        data-tab="expenses" 
+        class="nav-link group relative w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl font-extrabold text-sm transition-all duration-200 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-slate-800/80 text-left"
+        title="Costing & Expenses"
+      >
+        <i class="fa-solid fa-receipt w-6 text-center text-lg text-rose-500 shrink-0"></i>
+        <span class="sidebar-label whitespace-nowrap" data-i18n="navExpenses">খরচ ও ব্যয়</span>
+        <span class="sidebar-tooltip hidden group-hover:block absolute left-full ml-3 px-3 py-1.5 bg-gray-900 text-white text-xs font-bold rounded-xl whitespace-nowrap shadow-xl z-50 pointer-events-none" data-i18n="navExpenses">
+          খরচ ও ব্যয়
+        </span>
+      </button>
+
+      <!-- 4. Sales & Profit -->
+      <button 
+        data-tab="income" 
+        class="nav-link group relative w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl font-extrabold text-sm transition-all duration-200 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-slate-800/80 text-left"
+        title="Income & Profit"
+      >
+        <i class="fa-solid fa-sack-dollar w-6 text-center text-lg text-teal-500 shrink-0"></i>
+        <span class="sidebar-label whitespace-nowrap" data-i18n="navIncome">বিক্রি ও লাভ</span>
+        <span class="sidebar-tooltip hidden group-hover:block absolute left-full ml-3 px-3 py-1.5 bg-gray-900 text-white text-xs font-bold rounded-xl whitespace-nowrap shadow-xl z-50 pointer-events-none" data-i18n="navIncome">
+          বিক্রি ও লাভ
+        </span>
+      </button>
+
+      <!-- 5. Employees -->
+      <button 
+        data-tab="employees" 
+        class="nav-link group relative w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl font-extrabold text-sm transition-all duration-200 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-slate-800/80 text-left"
+        title="Employees"
+      >
+        <i class="fa-solid fa-users w-6 text-center text-lg text-indigo-500 shrink-0"></i>
+        <span class="sidebar-label whitespace-nowrap" data-i18n="navEmployees">কর্মচারীবৃন্দ</span>
+        <span class="sidebar-tooltip hidden group-hover:block absolute left-full ml-3 px-3 py-1.5 bg-gray-900 text-white text-xs font-bold rounded-xl whitespace-nowrap shadow-xl z-50 pointer-events-none" data-i18n="navEmployees">
+          কর্মচারীবৃন্দ
+        </span>
+      </button>
+
+      <!-- 6. Monthly Reports -->
+      <button 
+        data-tab="reports" 
+        class="nav-link group relative w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl font-extrabold text-sm transition-all duration-200 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-slate-800/80 text-left"
+        title="Monthly Reports"
+      >
+        <i class="fa-solid fa-file-invoice-dollar w-6 text-center text-lg text-cyan-500 shrink-0"></i>
+        <span class="sidebar-label whitespace-nowrap" data-i18n="navReports">মাসিক রিপোর্ট</span>
+        <span class="sidebar-tooltip hidden group-hover:block absolute left-full ml-3 px-3 py-1.5 bg-gray-900 text-white text-xs font-bold rounded-xl whitespace-nowrap shadow-xl z-50 pointer-events-none" data-i18n="navReports">
+          মাসিক রিপোর্ট
+        </span>
+      </button>
+    </div>
+
+    <!-- Sidebar Bottom / Live Status Card -->
+    <div class="p-3 border-t border-gray-100 dark:border-slate-800/80">
+      <div class="sidebar-label bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 rounded-2xl p-3 text-xs">
+        <div class="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-extrabold">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Health Shark Active</span>
         </div>
+        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">Mirpur Kitchen, Dhaka</p>
+      </div>
+      <div class="sidebar-collapsed-only justify-center py-2 text-emerald-600 dark:text-emerald-400">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" title="System Online"></span>
       </div>
     </div>
-  </header>
+  </aside>
 
-  <!-- ==================== MOBILE DRAWER ==================== -->
-  <div id="mobile-drawer" class="hidden md:hidden bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 px-4 py-3 space-y-1 shadow-lg transition-all">
-    <button data-tab="dashboard" class="nav-link w-full text-left px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-3">
-      <i class="fa-solid fa-chart-pie w-5 text-center"></i> <span data-i18n="navDashboard">ড্যাশবোর্ড</span>
-    </button>
-    <button data-tab="stock" class="nav-link w-full text-left px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-3">
-      <i class="fa-solid fa-boxes-stacked w-5 text-center"></i> <span data-i18n="navStock">স্টক ইনভেন্টরি</span>
-    </button>
-    <button data-tab="expenses" class="nav-link w-full text-left px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-3">
-      <i class="fa-solid fa-receipt w-5 text-center"></i> <span data-i18n="navExpenses">খরচ ও ব্যয়</span>
-    </button>
-    <button data-tab="income" class="nav-link w-full text-left px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-3">
-      <i class="fa-solid fa-sack-dollar w-5 text-center"></i> <span data-i18n="navIncome">বিক্রি ও লাভ</span>
-    </button>
-    <button data-tab="employees" class="nav-link w-full text-left px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-3">
-      <i class="fa-solid fa-users w-5 text-center"></i> <span data-i18n="navEmployees">কর্মচারীবৃন্দ</span>
-    </button>
-    <button data-tab="reports" class="nav-link w-full text-left px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-3">
-      <i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i> <span data-i18n="navReports">মাসিক রিপোর্ট</span>
-    </button>
-  </div>
+  <!-- ==================== MAIN APPLICATION WRAPPER ==================== -->
+  <div class="flex-1 flex flex-col min-w-0 min-h-screen">
 
-  <!-- ==================== MAIN CONTENT CONTAINER ==================== -->
-  <main class="max-w-[96%] mx-auto px-2 sm:px-4 py-6 sm:py-8 flex-1 w-full space-y-7">
+    <!-- Top Header -->
+    <header class="sticky top-0 z-30 bg-white/95 dark:bg-[#0f1b13]/95 backdrop-blur-md border-b border-gray-200/80 dark:border-slate-800 shadow-sm transition-colors">
+      <div class="max-w-[98%] mx-auto px-3 sm:px-5">
+        <div class="flex items-center justify-between h-20 sm:h-24 gap-3 sm:gap-4">
+          
+          <!-- Left: Mobile Menu Trigger / Desktop Sidebar Collapse Toggle -->
+          <div class="flex items-center gap-3">
+            <button 
+              id="mobile-menu-btn"
+              type="button" 
+              class="lg:hidden w-11 h-11 rounded-2xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-slate-700 transition-colors"
+              title="Open Navigation"
+            >
+              <i class="fa-solid fa-bars text-lg"></i>
+            </button>
+
+            <button 
+              id="topbar-sidebar-toggle-btn"
+              type="button"
+              class="hidden lg:flex w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 items-center justify-center text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-700 transition-colors"
+              title="Collapse / Expand Sidebar"
+            >
+              <i class="fa-solid fa-bars-staggered text-sm"></i>
+            </button>
+
+            <!-- Brand on mobile only -->
+            <div class="flex lg:hidden items-center gap-2.5">
+              <img src="assets/images/logo.png" alt="Health Shark" class="h-9 w-auto" />
+              <span class="font-heading font-extrabold text-lg text-brand-900 dark:text-brand-300 tracking-tight" data-i18n="brandName">Health Shark</span>
+            </div>
+          </div>
+
+          <!-- Center: Month & Year Selector Filter -->
+          <div class="hidden sm:flex items-center gap-2.5 bg-gray-100 dark:bg-slate-800/80 p-2 sm:p-2.5 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm">
+            <i class="fa-solid fa-calendar-days text-brand-700 dark:text-brand-400 pl-2 text-sm"></i>
+            <select id="filter-month-select" class="bg-transparent text-sm font-extrabold text-gray-700 dark:text-gray-200 border-0 cursor-pointer focus:ring-0">
+              <option value="all">All Months</option>
+              <option value="0">January</option>
+              <option value="1">February</option>
+              <option value="2">March</option>
+              <option value="3">April</option>
+              <option value="4">May</option>
+              <option value="5">June</option>
+              <option value="6">July</option>
+              <option value="7">August</option>
+              <option value="8">September</option>
+              <option value="9">October</option>
+              <option value="10">November</option>
+              <option value="11">December</option>
+            </select>
+            <span class="text-gray-300 dark:text-gray-600">|</span>
+            <select id="filter-year-select" class="bg-transparent text-sm font-extrabold text-gray-700 dark:text-gray-200 border-0 cursor-pointer focus:ring-0 pr-2">
+            </select>
+          </div>
+
+          <!-- Right: Language Pill, Theme Switch -->
+          <div class="flex items-center gap-3">
+            <!-- Language Toggle (EN | বাংলা) -->
+            <div class="inline-flex items-center bg-gray-100 dark:bg-slate-800 p-1.5 rounded-full border border-gray-200 dark:border-slate-700 text-xs sm:text-sm font-bold">
+              <button id="lang-btn-en" type="button" class="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all bg-brand-700 text-white shadow-sm">
+                EN
+              </button>
+              <button id="lang-btn-bn" type="button" class="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all text-gray-600 dark:text-gray-300 hover:text-brand-700">
+                বাংলা
+              </button>
+            </div>
+
+            <!-- Dark / Light Mode Toggle -->
+            <button 
+              id="theme-toggle-btn"
+              type="button" 
+              title="Toggle Dark / Light Theme"
+              class="w-11 h-11 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center transition-colors border border-gray-200 dark:border-slate-700 shadow-sm"
+            >
+              <i id="theme-icon" class="fa-solid fa-moon text-gray-600 dark:text-amber-400 text-base"></i>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Mobile Month Picker Row -->
+        <div class="sm:hidden pb-3 flex items-center gap-2">
+          <div class="flex-1 flex items-center gap-2 bg-gray-100 dark:bg-slate-800 p-2 rounded-xl text-xs font-bold">
+            <i class="fa-solid fa-calendar-days text-brand-700 text-xs"></i>
+            <select id="filter-month-select-mobile" onchange="document.getElementById('filter-month-select').value=this.value; document.getElementById('filter-month-select').dispatchEvent(new Event('change'))" class="bg-transparent flex-1 border-0 text-xs">
+              <option value="all">All Months</option>
+              <option value="0">January</option>
+              <option value="1">February</option>
+              <option value="2">March</option>
+              <option value="3">April</option>
+              <option value="4">May</option>
+              <option value="5">June</option>
+              <option value="6">July</option>
+              <option value="7">August</option>
+              <option value="8">September</option>
+              <option value="9">October</option>
+              <option value="10">November</option>
+              <option value="11">December</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ==================== MAIN CONTENT CONTAINER ==================== -->
+    <main class="max-w-[98%] mx-auto px-3 sm:px-6 py-6 sm:py-8 flex-1 w-full space-y-7">
 
     <!-- ==================== TOP KPI SUMMARY CARDS ==================== -->
     <section class="grid grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
@@ -258,28 +379,6 @@
       </div>
 
     </section>
-
-    <!-- ==================== DESKTOP TABS NAVIGATION ==================== -->
-    <nav class="hidden md:flex items-center gap-2 p-2 bg-gray-100 dark:bg-slate-800/80 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-inner">
-      <button data-tab="dashboard" class="nav-link flex-1 py-3.5 px-5 rounded-xl font-extrabold text-sm sm:text-base transition-all flex items-center justify-center gap-2.5">
-        <i class="fa-solid fa-chart-pie text-sm"></i> <span data-i18n="navDashboard">ড্যাশবোর্ড</span>
-      </button>
-      <button data-tab="stock" class="nav-link flex-1 py-3.5 px-5 rounded-xl font-extrabold text-sm sm:text-base transition-all flex items-center justify-center gap-2.5">
-        <i class="fa-solid fa-boxes-stacked text-sm"></i> <span data-i18n="navStock">স্টক ইনভেন্টরি</span>
-      </button>
-      <button data-tab="expenses" class="nav-link flex-1 py-3.5 px-5 rounded-xl font-extrabold text-sm sm:text-base transition-all flex items-center justify-center gap-2.5">
-        <i class="fa-solid fa-receipt text-sm"></i> <span data-i18n="navExpenses">খরচ ও ব্যয়</span>
-      </button>
-      <button data-tab="income" class="nav-link flex-1 py-3.5 px-5 rounded-xl font-extrabold text-sm sm:text-base transition-all flex items-center justify-center gap-2.5">
-        <i class="fa-solid fa-sack-dollar text-sm"></i> <span data-i18n="navIncome">বিক্রি ও লাভ</span>
-      </button>
-      <button data-tab="employees" class="nav-link flex-1 py-3.5 px-5 rounded-xl font-extrabold text-sm sm:text-base transition-all flex items-center justify-center gap-2.5">
-        <i class="fa-solid fa-users text-sm"></i> <span data-i18n="navEmployees">কর্মচারীবৃন্দ</span>
-      </button>
-      <button data-tab="reports" class="nav-link flex-1 py-3.5 px-5 rounded-xl font-extrabold text-sm sm:text-base transition-all flex items-center justify-center gap-2.5">
-        <i class="fa-solid fa-file-invoice-dollar text-sm"></i> <span data-i18n="navReports">মাসিক রিপোর্ট</span>
-      </button>
-    </nav>
 
     <!-- ========================================================================= -->
     <!-- TAB 1: DASHBOARD OVERVIEW -->
@@ -781,7 +880,7 @@
 
   <!-- ==================== FOOTER ==================== -->
   <footer class="bg-white dark:bg-[#0c160f] border-t border-gray-200 dark:border-slate-800 py-6 text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-auto">
-    <div class="max-w-[96%] mx-auto px-2 sm:px-4 flex flex-col md:flex-row items-center justify-between gap-3">
+    <div class="max-w-[98%] mx-auto px-3 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-3">
       <div class="flex items-center gap-2">
         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
         <span data-i18n="liveStatus">সচল ও নিরাপদ ডাটা (GitHub Pages Ready)</span>
@@ -797,6 +896,8 @@
       </div>
     </div>
   </footer>
+
+  </div> <!-- ==================== END MAIN APPLICATION WRAPPER ==================== -->
 
   <!-- ========================================================================= -->
   <!-- MODAL: ADD / EDIT STOCK ITEM -->

@@ -18,7 +18,10 @@ class HealthSharkApp {
     // 1. Initialize Theme
     this.applyTheme(this.theme);
 
-    // 2. Initialize Data Store
+    // 2. Initialize Sidebar Navigation
+    this.initSidebar();
+
+    // 3. Initialize Data Store
     await window.hsStore.init();
 
     // 3. Populate Month & Year Dropdowns
@@ -78,6 +81,89 @@ class HealthSharkApp {
     this.applyTheme(newTheme);
   }
 
+  // --- SIDEBAR COLLAPSE / EXPAND MANAGEMENT ---
+  initSidebar() {
+    const isCollapsed = localStorage.getItem("hs_sidebar_collapsed") === "true";
+    this.setSidebarCollapsed(isCollapsed, false);
+
+    // Desktop Toggle Button (inside sidebar)
+    const toggleBtn = document.getElementById("sidebar-toggle-btn");
+    if (toggleBtn) {
+      toggleBtn.addEventListener("click", () => this.toggleSidebar());
+    }
+
+    // Topbar Sidebar Toggle Button
+    const topbarToggleBtn = document.getElementById("topbar-sidebar-toggle-btn");
+    if (topbarToggleBtn) {
+      topbarToggleBtn.addEventListener("click", () => this.toggleSidebar());
+    }
+
+    // Mobile Open Drawer
+    const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+    if (mobileMenuBtn) {
+      mobileMenuBtn.addEventListener("click", () => this.toggleMobileSidebar(true));
+    }
+
+    // Mobile Close Drawer
+    const mobileCloseBtn = document.getElementById("sidebar-close-mobile");
+    if (mobileCloseBtn) {
+      mobileCloseBtn.addEventListener("click", () => this.toggleMobileSidebar(false));
+    }
+
+    // Backdrop Click
+    const backdrop = document.getElementById("sidebar-backdrop");
+    if (backdrop) {
+      backdrop.addEventListener("click", () => this.toggleMobileSidebar(false));
+    }
+  }
+
+  toggleSidebar() {
+    const sidebar = document.getElementById("app-sidebar");
+    if (!sidebar) return;
+    const isCurrentlyCollapsed = sidebar.classList.contains("collapsed");
+    this.setSidebarCollapsed(!isCurrentlyCollapsed, true);
+  }
+
+  setSidebarCollapsed(collapsed, save = true) {
+    const sidebar = document.getElementById("app-sidebar");
+    const toggleIcon = document.getElementById("sidebar-toggle-icon");
+    if (!sidebar) return;
+
+    if (collapsed) {
+      sidebar.classList.add("collapsed");
+      if (toggleIcon) {
+        toggleIcon.classList.remove("fa-angles-left");
+        toggleIcon.classList.add("fa-angles-right");
+      }
+    } else {
+      sidebar.classList.remove("collapsed");
+      if (toggleIcon) {
+        toggleIcon.classList.remove("fa-angles-right");
+        toggleIcon.classList.add("fa-angles-left");
+      }
+    }
+
+    if (save) {
+      localStorage.setItem("hs_sidebar_collapsed", collapsed ? "true" : "false");
+    }
+  }
+
+  toggleMobileSidebar(open) {
+    const sidebar = document.getElementById("app-sidebar");
+    const backdrop = document.getElementById("sidebar-backdrop");
+    if (!sidebar) return;
+
+    if (open) {
+      sidebar.classList.add("mobile-open");
+      if (backdrop) backdrop.classList.add("active");
+      document.body.classList.add("overflow-hidden", "lg:overflow-auto");
+    } else {
+      sidebar.classList.remove("mobile-open");
+      if (backdrop) backdrop.classList.remove("active");
+      document.body.classList.remove("overflow-hidden", "lg:overflow-auto");
+    }
+  }
+
   // --- TAB NAVIGATION ---
   switchTab(tabId) {
     this.currentTab = tabId;
@@ -86,11 +172,11 @@ class HealthSharkApp {
     document.querySelectorAll(".nav-link").forEach((btn) => {
       const target = btn.getAttribute("data-tab");
       if (target === tabId) {
-        btn.classList.add("bg-brand-700", "text-white", "shadow-sm");
-        btn.classList.remove("text-gray-600", "hover:bg-gray-100", "dark:text-gray-300", "dark:hover:bg-slate-800");
+        btn.classList.add("active-tab", "bg-brand-700", "text-white", "shadow-md");
+        btn.classList.remove("text-gray-600", "hover:bg-gray-100", "dark:text-gray-300", "dark:hover:bg-slate-800/80");
       } else {
-        btn.classList.remove("bg-brand-700", "text-white", "shadow-sm");
-        btn.classList.add("text-gray-600", "hover:bg-gray-100", "dark:text-gray-300", "dark:hover:bg-slate-800");
+        btn.classList.remove("active-tab", "bg-brand-700", "text-white", "shadow-md");
+        btn.classList.add("text-gray-600", "hover:bg-gray-100", "dark:text-gray-300", "dark:hover:bg-slate-800/80");
       }
     });
 
@@ -103,7 +189,8 @@ class HealthSharkApp {
       activePane.classList.add("active");
     }
 
-    // Close mobile drawer if open
+    // Close mobile drawer / sidebar if open
+    this.toggleMobileSidebar(false);
     const drawer = document.getElementById("mobile-drawer");
     if (drawer && !drawer.classList.contains("hidden")) {
       drawer.classList.add("hidden");

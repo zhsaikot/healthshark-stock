@@ -116,6 +116,86 @@ html[lang="bn"] .font-heading {
   opacity: 1;
 }
 
+/* ==================== COLLAPSIBLE SIDEBAR ==================== */
+#app-sidebar {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Collapsed state on desktop */
+#app-sidebar.collapsed {
+  width: 5rem; /* 80px */
+}
+
+#app-sidebar.collapsed .sidebar-label {
+  display: none !important;
+}
+
+#app-sidebar.collapsed .sidebar-expanded-only {
+  display: none !important;
+}
+
+#app-sidebar.collapsed .sidebar-collapsed-only {
+  display: flex !important;
+}
+
+#app-sidebar:not(.collapsed) .sidebar-collapsed-only {
+  display: none !important;
+}
+
+#app-sidebar.collapsed .nav-link {
+  justify-content: center;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+#app-sidebar.collapsed .nav-link i {
+  margin-right: 0 !important;
+}
+
+/* Active tab style in sidebar */
+#app-sidebar .nav-link.active-tab {
+  background-color: #15803d !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px -2px rgba(21, 128, 61, 0.35);
+}
+
+#app-sidebar .nav-link.active-tab i {
+  color: #ffffff !important;
+}
+
+/* Tooltip behavior: only show on hover when sidebar is collapsed */
+#app-sidebar:not(.collapsed) .sidebar-tooltip {
+  display: none !important;
+}
+
+#app-sidebar.collapsed .nav-link:hover .sidebar-tooltip {
+  display: block !important;
+}
+
+/* Mobile drawer open state */
+#app-sidebar.mobile-open {
+  transform: translateX(0) !important;
+}
+
+#sidebar-backdrop.active {
+  display: block !important;
+  opacity: 1 !important;
+}
+
+/* Custom Slim Scrollbar for Sidebar */
+#app-sidebar ::-webkit-scrollbar {
+  width: 4px;
+}
+
+#app-sidebar ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.dark #app-sidebar ::-webkit-scrollbar-thumb {
+  background: #1e293b;
+}
+
 /* Custom Focus Ring */
 input:focus, select:focus, textarea:focus, button:focus-visible {
   outline: none;
