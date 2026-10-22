@@ -1301,6 +1301,15 @@ class HealthSharkApp {
           </span>
         </td>
         <td class="py-3 px-3 text-right space-x-1">
+          ${inv.dueAmount > 0 ? `
+            <button 
+              onclick="window.hsApp.clearInvoiceDue('${inv.id}')" 
+              title="${window.hsI18n.t('clearDueTooltip') || 'বকেয়া পরিশোধ সম্পন্ন করুন'}" 
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs shadow-sm transition-all"
+            >
+              <i class="fa-solid fa-money-bill-wave text-xs"></i> <span>${window.hsI18n.t("btnClearDue")}</span>
+            </button>
+          ` : ""}
           <button onclick="window.hsApp.editInvoice('${inv.id}')" title="${window.hsI18n.t('editInvoice') || 'Edit Invoice'}" class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950 dark:hover:bg-amber-900 text-amber-700 dark:text-amber-300 font-bold text-xs transition-colors">
             <i class="fa-solid fa-pen-to-square"></i>
           </button>
@@ -1315,6 +1324,34 @@ class HealthSharkApp {
     `
       )
       .join("");
+  }
+
+  clearInvoiceDue(id) {
+    const inv = window.hsStore.getInvoiceById(id);
+    if (!inv || (Number(inv.dueAmount) || 0) <= 0) return;
+
+    const clearedAmount = Number(inv.dueAmount) || 0;
+    const fullTotal = Number(inv.grandTotal) || 0;
+
+    window.hsStore.updateInvoice(id, {
+      paidAmount: fullTotal,
+      dueAmount: 0
+    });
+
+    // If currently editing this invoice in form, sync active values
+    if (this.editingInvoiceId === id) {
+      const paidInput = document.getElementById("inv-paid");
+      if (paidInput) paidInput.value = fullTotal;
+      this.calculateInvoiceTotals();
+    }
+
+    this.renderInvoicesHistoryTable();
+    this.showToast(
+      window.hsI18n.currentLang === "bn"
+        ? `বকেয়া (৳${clearedAmount.toLocaleString()}) পরিশোধ সম্পন্ন হয়েছে! ইনভয়েসটি এখন সম্পূর্ণ পরিশোধিত।`
+        : `Due payment (Tk. ${clearedAmount.toLocaleString()}) cleared! Invoice is now fully paid.`,
+      "success"
+    );
   }
 
   reprintInvoice(id) {
