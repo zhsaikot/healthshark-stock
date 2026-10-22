@@ -121,7 +121,7 @@ class DataStore {
     if (!item) return;
 
     const oldQty = Number(item.quantity) || 0;
-    const newQty = Math.max(0, oldQty + Number(delta));
+    const newQty = Math.max(0, Math.round((oldQty + Number(delta)) * 100) / 100);
     item.quantity = newQty;
     item.updatedAt = new Date().toISOString().split("T")[0];
 

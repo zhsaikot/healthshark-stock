@@ -628,16 +628,16 @@ class HealthSharkApp {
           <td class="py-4 px-5 text-right">
             <div class="inline-flex items-center gap-1.5">
               <button 
-                onclick="window.hsApp.openQuickStockModal('${item.id}', 1)"
-                title="Stock In (+)"
-                class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-xs sm:text-sm transition-colors"
+                onclick="window.hsApp.quickAdjustStock('${item.id}', 1)"
+                title="+1 (Add 1)"
+                class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-50 hover:bg-emerald-200 dark:bg-emerald-950/50 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-400 font-black flex items-center justify-center text-xs sm:text-sm transition-all active:scale-90 shadow-sm"
               >
                 <i class="fa-solid fa-plus"></i>
               </button>
               <button 
-                onclick="window.hsApp.openQuickStockModal('${item.id}', -1)"
-                title="Stock Out (-)"
-                class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/40 text-amber-700 dark:text-amber-400 flex items-center justify-center text-xs sm:text-sm transition-colors"
+                onclick="window.hsApp.quickAdjustStock('${item.id}', -1)"
+                title="-1 (Deduct 1)"
+                class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-50 hover:bg-amber-200 dark:bg-amber-950/50 dark:hover:bg-amber-900/60 text-amber-700 dark:text-amber-400 font-black flex items-center justify-center text-xs sm:text-sm transition-all active:scale-90 shadow-sm"
               >
                 <i class="fa-solid fa-minus"></i>
               </button>
@@ -1433,6 +1433,36 @@ class HealthSharkApp {
       window.hsStore.deleteItem(id);
       this.showToast(window.hsI18n.t("toastItemDeleted"));
     }
+  }
+
+  // 1-Click Quick Stock Increment / Decrement (+1 / -1)
+  quickAdjustStock(id, delta) {
+    const item = window.hsStore.getItemById(id);
+    if (!item) return;
+
+    const oldQty = Number(item.quantity) || 0;
+    if (delta < 0 && oldQty <= 0) {
+      this.showToast(
+        window.hsI18n.getLang() === "bn" 
+          ? `${item.name}: স্টক ইতিমধ্যে ০ তে রয়েছে!` 
+          : `${item.name}: Stock is already at 0!`,
+        "alert"
+      );
+      return;
+    }
+
+    const step = Number(delta);
+    const reason = step > 0 ? "Quick +1 Step" : "Quick -1 Step";
+    window.hsStore.adjustStock(id, step, reason);
+
+    const newQty = Math.max(0, Math.round((oldQty + step) * 100) / 100);
+    const unitText = window.hsI18n.t(item.unit) || item.unit || "";
+    const isBn = window.hsI18n.getLang() === "bn";
+    const msg = isBn
+      ? `${item.name}: ${step > 0 ? "+১ যোগ হয়েছে" : "-১ বাদ দেওয়া হয়েছে"} (${oldQty} ➔ ${newQty} ${unitText})`
+      : `${item.name}: ${step > 0 ? "+1 Added" : "-1 Deducted"} (${oldQty} ➔ ${newQty} ${unitText})`;
+
+    this.showToast(msg);
   }
 
   // Quick Stock In / Out Modal
