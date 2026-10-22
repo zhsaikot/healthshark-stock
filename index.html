@@ -674,39 +674,39 @@
       
       <!-- Executive Report for Owner Card -->
       <div class="bg-gradient-to-br from-brand-900 to-brand-950 text-white p-6 sm:p-8 rounded-3xl shadow-xl relative overflow-hidden">
-        <div class="relative z-10 max-w-2xl">
+        <div class="relative z-10 w-full">
           <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-800/80 border border-brand-700/60 text-brand-200 text-xs font-bold mb-3">
             <i class="fa-solid fa-file-pdf"></i> Official Monthly Statement
           </div>
           <h2 class="text-2xl sm:text-3xl font-heading font-extrabold tracking-tight" data-i18n="monthlyReportCardTitle">
             মালিকের জন্য মাসিক পূর্ণাঙ্গ রিপোর্ট
           </h2>
-          <p class="text-brand-200 text-xs sm:text-sm mt-2 leading-relaxed" data-i18n="monthlyReportCardSub">
+          <p class="text-brand-200 text-xs sm:text-sm mt-2 leading-relaxed max-w-3xl" data-i18n="monthlyReportCardSub">
             আয়, ব্যয়, নিট লাভ এবং বর্তমান স্টকের পূর্ণ বিবরণী সম্বলিত প্রফেশনাল পিডিএফ ডাউনলোড করুন।
           </p>
 
-          <div class="flex flex-wrap items-center gap-3 mt-6">
+          <div class="flex flex-nowrap items-center gap-2.5 sm:gap-3 mt-6 overflow-x-auto pb-1 scrollbar-none">
             <button 
               onclick="window.hsApp.openExportModal('master', 'pdf')"
-              class="px-5 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-brand-950 font-heading font-extrabold text-sm sm:text-base transition-all shadow-lg flex items-center gap-2.5"
+              class="px-4 sm:px-5 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-brand-950 font-heading font-extrabold text-sm sm:text-base transition-all shadow-lg flex items-center gap-2.5 whitespace-nowrap flex-shrink-0"
             >
               <i class="fa-solid fa-file-pdf text-xl text-rose-700"></i> <span data-i18n="btnDownloadPDF">PDF রিপোর্ট ডাউনলোড</span>
             </button>
             <button 
               onclick="window.hsApp.openExportModal('stock', 'pdf')"
-              class="px-5 py-3 rounded-2xl bg-white/20 hover:bg-white/30 text-white font-extrabold text-sm sm:text-base transition-all border border-white/30 flex items-center gap-2"
+              class="px-4 sm:px-5 py-3 rounded-2xl bg-white/20 hover:bg-white/30 text-white font-extrabold text-sm sm:text-base transition-all border border-white/30 flex items-center gap-2 whitespace-nowrap flex-shrink-0"
             >
               <i class="fa-solid fa-boxes-stacked text-amber-300"></i> Today's Stock PDF
             </button>
             <button 
               onclick="window.hsApp.openExportModal('expenses', 'csv')"
-              class="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm transition-all border border-white/20 flex items-center gap-2"
+              class="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm transition-all border border-white/20 flex items-center gap-2 whitespace-nowrap flex-shrink-0"
             >
               <i class="fa-solid fa-file-csv text-emerald-400"></i> Expenses CSV
             </button>
             <button 
               onclick="window.hsApp.openExportModal('sales', 'csv')"
-              class="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm transition-all border border-white/20 flex items-center gap-2"
+              class="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm transition-all border border-white/20 flex items-center gap-2 whitespace-nowrap flex-shrink-0"
             >
               <i class="fa-solid fa-file-csv text-teal-400"></i> Sales CSV
             </button>
