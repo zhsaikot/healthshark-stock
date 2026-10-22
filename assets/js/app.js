@@ -21,7 +21,8 @@ class HealthSharkApp {
     // 2. Initialize Data Store
     await window.hsStore.init();
 
-    // 3. Populate Year Dropdowns
+    // 3. Populate Month & Year Dropdowns
+    this.populateMonthOptions();
     this.populateYearOptions();
 
     // 4. Bind Global UI Events
@@ -40,8 +41,9 @@ class HealthSharkApp {
     });
 
     window.addEventListener("language-changed", () => {
-      this.renderAll();
+      this.populateMonthOptions();
       this.populateYearOptions();
+      this.renderAll();
     });
   }
 
@@ -111,7 +113,24 @@ class HealthSharkApp {
     this.renderActiveTab();
   }
 
-  // --- POPULATE YEAR OPTIONS ---
+  // --- POPULATE MONTH & YEAR OPTIONS ---
+  populateMonthOptions() {
+    const desktopSelect = document.getElementById("filter-month-select");
+    const mobileSelect = document.getElementById("filter-month-select-mobile");
+    const saved = window.hsStore.selectedMonthFilter;
+    const isBn = window.hsI18n.getLang() === "bn";
+
+    const allMonthsText = isBn ? "সকল মাস (All Months)" : "All Months";
+    let html = `<option value="all">${allMonthsText}</option>`;
+    for (let m = 0; m < 12; m++) {
+      const name = window.hsI18n.getMonthName(m);
+      html += `<option value="${m}" ${String(m) === String(saved) ? "selected" : ""}>${name}</option>`;
+    }
+
+    if (desktopSelect) desktopSelect.innerHTML = html;
+    if (mobileSelect) mobileSelect.innerHTML = html;
+  }
+
   populateYearOptions() {
     const yearSelect = document.getElementById("filter-year-select");
     if (!yearSelect) return;

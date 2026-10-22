@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="bn" class="light">
+<html lang="en" class="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -29,8 +29,8 @@
             }
           },
           fontFamily: {
-            sans: ['"Plus Jakarta Sans"', '"Hind Siliguri"', 'sans-serif'],
-            heading: ['"Outfit"', '"Hind Siliguri"', 'sans-serif'],
+            sans: ['"Plus Jakarta Sans"', '"Noto Sans Bengali"', 'sans-serif'],
+            heading: ['"Outfit"', '"Noto Sans Bengali"', 'sans-serif'],
           }
         }
       }
@@ -59,10 +59,10 @@
           <img src="assets/images/logo.png" alt="Health Shark Logo" class="h-12 w-auto object-contain transition-transform hover:scale-105" />
           <div>
             <h1 class="font-heading font-extrabold text-xl text-brand-900 dark:text-brand-300 tracking-tight leading-tight" data-i18n="brandName">
-              হেল্থ শার্ক
+              Health Shark
             </h1>
             <p class="text-[11px] font-semibold text-brand-700 dark:text-brand-400 uppercase tracking-wider" data-i18n="brandSubtitle">
-              স্টক ও ব্যবসা ব্যবস্থাপনা ড্যাশবোর্ড
+              Stock & Business Management
             </p>
           </div>
         </div>
@@ -71,19 +71,19 @@
         <div class="hidden md:flex items-center gap-2 bg-gray-100 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-gray-200 dark:border-slate-700">
           <i class="fa-solid fa-calendar-days text-brand-700 dark:text-brand-400 pl-2 text-xs"></i>
           <select id="filter-month-select" class="bg-transparent text-xs font-bold text-gray-700 dark:text-gray-200 border-0 cursor-pointer focus:ring-0">
-            <option value="all">সকল মাস (All Months)</option>
-            <option value="0">জানুয়ারি (January)</option>
-            <option value="1">ফেব্রুয়ারি (February)</option>
-            <option value="2">মার্চ (March)</option>
-            <option value="3">এপ্রিল (April)</option>
-            <option value="4">মে (May)</option>
-            <option value="5">জুন (June)</option>
-            <option value="6">জুলাই (July)</option>
-            <option value="7">আগস্ট (August)</option>
-            <option value="8">সেপ্টেম্বর (September)</option>
-            <option value="9">অক্টোবর (October)</option>
-            <option value="10">নভেম্বর (November)</option>
-            <option value="11">ডিসেম্বর (December)</option>
+            <option value="all">All Months</option>
+            <option value="0">January</option>
+            <option value="1">February</option>
+            <option value="2">March</option>
+            <option value="3">April</option>
+            <option value="4">May</option>
+            <option value="5">June</option>
+            <option value="6">July</option>
+            <option value="7">August</option>
+            <option value="8">September</option>
+            <option value="9">October</option>
+            <option value="10">November</option>
+            <option value="11">December</option>
           </select>
           <span class="text-gray-300 dark:text-gray-600">|</span>
           <select id="filter-year-select" class="bg-transparent text-xs font-bold text-gray-700 dark:text-gray-200 border-0 cursor-pointer focus:ring-0 pr-2">
@@ -93,13 +93,13 @@
 
         <!-- Right: Language Pill, Theme Switch, Mobile Button -->
         <div class="flex items-center gap-3">
-          <!-- Language Toggle (বাংলা | EN) -->
+          <!-- Language Toggle (EN | বাংলা) -->
           <div class="inline-flex items-center bg-gray-100 dark:bg-slate-800 p-1 rounded-full border border-gray-200 dark:border-slate-700 text-xs font-bold">
-            <button id="lang-btn-bn" type="button" class="px-2.5 py-1 rounded-full text-xs font-bold transition-all bg-brand-700 text-white shadow-sm">
-              বাংলা
-            </button>
-            <button id="lang-btn-en" type="button" class="px-2.5 py-1 rounded-full text-xs font-bold transition-all text-gray-600 dark:text-gray-300 hover:text-brand-700">
+            <button id="lang-btn-en" type="button" class="px-2.5 py-1 rounded-full text-xs font-bold transition-all bg-brand-700 text-white shadow-sm">
               EN
+            </button>
+            <button id="lang-btn-bn" type="button" class="px-2.5 py-1 rounded-full text-xs font-bold transition-all text-gray-600 dark:text-gray-300 hover:text-brand-700">
+              বাংলা
             </button>
           </div>
 
@@ -130,19 +130,19 @@
         <div class="flex-1 flex items-center gap-2 bg-gray-100 dark:bg-slate-800 p-2 rounded-xl text-xs font-bold">
           <i class="fa-solid fa-calendar-days text-brand-700 text-xs"></i>
           <select id="filter-month-select-mobile" onchange="document.getElementById('filter-month-select').value=this.value; document.getElementById('filter-month-select').dispatchEvent(new Event('change'))" class="bg-transparent flex-1 border-0 text-xs">
-            <option value="all">সকল মাস (All Months)</option>
-            <option value="0">জানুয়ারি</option>
-            <option value="1">ফেব্রুয়ারি</option>
-            <option value="2">মার্চ</option>
-            <option value="3">এপ্রিল</option>
-            <option value="4">মে</option>
-            <option value="5">জুন</option>
-            <option value="6">জুলাই</option>
-            <option value="7">আগস্ট</option>
-            <option value="8">সেপ্টেম্বর</option>
-            <option value="9">অক্টোবর</option>
-            <option value="10">নভেম্বর</option>
-            <option value="11">ডিসেম্বর</option>
+            <option value="all">All Months</option>
+            <option value="0">January</option>
+            <option value="1">February</option>
+            <option value="2">March</option>
+            <option value="3">April</option>
+            <option value="4">May</option>
+            <option value="5">June</option>
+            <option value="6">July</option>
+            <option value="7">August</option>
+            <option value="8">September</option>
+            <option value="9">October</option>
+            <option value="10">November</option>
+            <option value="11">December</option>
           </select>
         </div>
       </div>

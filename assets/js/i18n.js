@@ -473,7 +473,7 @@ const translations = {
 
 class I18nManager {
   constructor() {
-    this.currentLang = localStorage.getItem("hs_stock_lang") || "bn"; // Default to Bengali for local ease
+    this.currentLang = localStorage.getItem("hs_stock_lang") || "en"; // Default to English on initial entry
   }
 
   getLang() {
@@ -500,6 +500,8 @@ class I18nManager {
   }
 
   applyTranslations() {
+    document.documentElement.lang = this.currentLang;
+
     document.querySelectorAll("[data-i18n]").forEach((el) => {
       const key = el.getAttribute("data-i18n");
       const text = this.t(key);
