@@ -44,6 +44,7 @@ class ReportsEngine {
     // 2. Map known categories and payment methods
     const categoryMap = {
       catRaw: "Raw Ingredients",
+      catFrozen: "Frozen Food",
       catMeals: "Pre-Order Meals & Combos",
       catBurgers: "Burgers & Sandwiches",
       catSnacks: "Snacks & Bites",

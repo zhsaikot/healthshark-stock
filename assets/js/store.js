@@ -64,6 +64,67 @@ class DataStore {
     }
   }
 
+  // --- CATEGORIES ---
+  getDefaultCategories() {
+    return [
+      { id: "catRaw", nameBn: "কাঁচামাল (Raw Material)", nameEn: "Raw Ingredients" },
+      { id: "catFrozen", nameBn: "ফ্রোজেন ফুড (Frozen Food)", nameEn: "Frozen Food" },
+      { id: "catMeals", nameBn: "প্রি-অর্ডার মিল ও বিরিয়ানি", nameEn: "Pre-Order Meals & Combos" },
+      { id: "catBurgers", nameBn: "বার্গার ও স্যান্ডউইচ", nameEn: "Burgers & Sandwiches" },
+      { id: "catSnacks", nameBn: "স্ন্যাকস ও মোমো", nameEn: "Snacks & Momos" },
+      { id: "catDesserts", nameBn: "মিষ্টান্ন ও ডেজার্ট", nameEn: "Desserts & Bakery" },
+      { id: "catPackaging", nameBn: "বক্স ও প্যাকেজিং", nameEn: "Packaging & Boxes" },
+      { id: "catBeverage", nameBn: "পানীয় ও ড্রিঙ্কস", nameEn: "Beverages & Drinks" }
+    ];
+  }
+
+  getCustomCategories() {
+    try {
+      const stored = localStorage.getItem("hs_custom_categories");
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  getCategories() {
+    const defaults = this.getDefaultCategories();
+    const custom = this.getCustomCategories();
+    return [...defaults, ...custom];
+  }
+
+  addCustomCategory(name) {
+    if (!name || !name.trim()) return null;
+    const cleanName = name.trim();
+    const customList = this.getCustomCategories();
+
+    // Check if category name already exists
+    const all = this.getCategories();
+    const existing = all.find(
+      (c) =>
+        c.nameBn.toLowerCase() === cleanName.toLowerCase() ||
+        c.nameEn.toLowerCase() === cleanName.toLowerCase() ||
+        c.id === cleanName
+    );
+    if (existing) return existing;
+
+    const newCat = {
+      id: "cat_custom_" + Date.now(),
+      nameBn: cleanName,
+      nameEn: cleanName,
+      isCustom: true
+    };
+
+    customList.push(newCat);
+    try {
+      localStorage.setItem("hs_custom_categories", JSON.stringify(customList));
+    } catch (e) {
+      console.warn("Could not save custom categories:", e);
+    }
+    this.addActivity(`Added new product category: ${cleanName}`, "info");
+    return newCat;
+  }
+
   // --- STOCK ITEMS ---
   getItems(filter = {}) {
     let list = [...(this.data.items || [])];
@@ -72,14 +133,15 @@ class DataStore {
       list = list.filter((i) => i.category === filter.category);
     }
     if (filter.type && filter.type !== "all") {
-      list = list.filter((i) => i.type === filter.type);
+      list = list.filter((i) => i.type === filter.type || i.category === filter.type);
     }
     if (filter.search) {
       const q = filter.search.toLowerCase();
       list = list.filter(
         (i) =>
           (i.name && i.name.toLowerCase().includes(q)) ||
-          (i.id && i.id.toLowerCase().includes(q))
+          (i.id && i.id.toLowerCase().includes(q)) ||
+          (i.category && i.category.toLowerCase().includes(q))
       );
     }
     return list;

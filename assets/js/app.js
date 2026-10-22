@@ -1562,10 +1562,60 @@ class HealthSharkApp {
   }
 
   // Stock Add / Edit Modal
+  populateStockCategorySelect(selectedCategory = null) {
+    const select = document.getElementById("stock-item-category");
+    if (!select) return;
+
+    const categories = window.hsStore.getCategories();
+    const isBn = window.hsI18n.currentLang === "bn";
+
+    let html = categories
+      .map(
+        (cat) => `
+        <option value="${cat.id}">
+          ${isBn ? (cat.nameBn || cat.nameEn) : (cat.nameEn || cat.nameBn)}
+        </option>
+      `
+      )
+      .join("");
+
+    html += `
+      <option value="__new__" class="font-bold text-brand-700 bg-brand-50">
+        ${window.hsI18n.t("addNewCategory")}
+      </option>
+    `;
+
+    select.innerHTML = html;
+
+    if (selectedCategory && selectedCategory !== "__new__") {
+      select.value = selectedCategory;
+    } else if (categories.length > 0) {
+      select.value = categories[0].id;
+    }
+  }
+
+  promptAddCustomCategory() {
+    const name = prompt(window.hsI18n.t("promptNewCategory"));
+    if (!name || !name.trim()) return;
+
+    const newCat = window.hsStore.addCustomCategory(name.trim());
+    if (newCat) {
+      this.populateStockCategorySelect(newCat.id);
+      this.showToast(window.hsI18n.t("toastCategoryAdded"), "success");
+    }
+  }
+
+  onCategorySelectChange(selectEl) {
+    if (selectEl && selectEl.value === "__new__") {
+      this.promptAddCustomCategory();
+    }
+  }
+
   openAddItemModal() {
     document.getElementById("modal-stock-title").textContent = window.hsI18n.t("modalAddItemTitle");
     document.getElementById("stock-form").reset();
     document.getElementById("stock-item-id").value = "";
+    this.populateStockCategorySelect("catRaw");
     this.openModal("modal-stock");
   }
 
@@ -1576,8 +1626,7 @@ class HealthSharkApp {
     document.getElementById("modal-stock-title").textContent = window.hsI18n.t("modalEditItemTitle");
     document.getElementById("stock-item-id").value = item.id;
     document.getElementById("stock-item-name").value = item.name;
-    document.getElementById("stock-item-category").value = item.category || "catRaw";
-    document.getElementById("stock-item-type").value = item.type || "typeRaw";
+    this.populateStockCategorySelect(item.category || "catRaw");
     document.getElementById("stock-item-unit").value = item.unit || "unitKg";
     document.getElementById("stock-item-qty").value = item.quantity;
     document.getElementById("stock-item-threshold").value = item.threshold;
@@ -1592,14 +1641,19 @@ class HealthSharkApp {
     const id = document.getElementById("stock-item-id").value;
     const name = document.getElementById("stock-item-name").value.trim();
     const category = document.getElementById("stock-item-category").value;
-    const type = document.getElementById("stock-item-type").value;
     const unit = document.getElementById("stock-item-unit").value;
     const quantity = Number(document.getElementById("stock-item-qty").value) || 0;
     const threshold = Number(document.getElementById("stock-item-threshold").value) || 0;
     const costPrice = Number(document.getElementById("stock-item-cost").value) || 0;
     const sellingPrice = Number(document.getElementById("stock-item-sell").value) || 0;
 
-    if (!name) return;
+    if (!name || category === "__new__") return;
+
+    // Automatically map internal type
+    let type = "typeFinished";
+    if (category === "catRaw") type = "typeRaw";
+    else if (category === "catPackaging") type = "typePackaging";
+    else if (category === "catFrozen") type = "typeFrozen";
 
     window.hsStore.saveItem({
       id: id || undefined,

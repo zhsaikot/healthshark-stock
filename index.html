@@ -551,8 +551,11 @@
           <button data-type="all" class="stock-type-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all bg-brand-700 text-white shadow-sm" data-i18n="tabAllItems">
             সকল মালামাল
           </button>
-          <button data-type="typeRaw" class="stock-type-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200" data-i18n="tabRawMaterials">
+          <button data-type="catRaw" class="stock-type-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200" data-i18n="tabRawMaterials">
             কাঁচামাল
+          </button>
+          <button data-type="catFrozen" class="stock-type-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200" data-i18n="tabFrozenFood">
+            ফ্রোজেন ফুড
           </button>
           <button data-type="typeFinished" class="stock-type-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200" data-i18n="tabFinishedFood">
             তৈরি খাবার
@@ -1433,26 +1436,24 @@
           <input type="text" id="stock-item-name" required placeholder="e.g. Chicken Broiler / পোলাও চাল" class="w-full px-4 py-2.5 sm:py-3 rounded-2xl text-sm sm:text-base bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-100 font-medium focus:ring-2 focus:ring-brand-500 outline-none transition" />
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm sm:text-base font-bold text-gray-700 dark:text-gray-200 mb-1.5" data-i18n="labelCategory">ক্যাটাগরি</label>
-            <select id="stock-item-category" class="w-full px-4 py-2.5 sm:py-3 rounded-2xl text-sm sm:text-base bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-100 font-medium focus:ring-2 focus:ring-brand-500 outline-none transition">
-              <option value="catRaw">কাঁচামাল (Raw)</option>
-              <option value="catMeals">প্রি-অর্ডার মিল (Meals)</option>
-              <option value="catBurgers">বার্গার ও স্যান্ডউইচ</option>
-              <option value="catSnacks">স্ন্যাকস ও মোমো</option>
-              <option value="catDesserts">মিষ্টান্ন ও ব্রাউনি</option>
-              <option value="catPackaging">বক্স ও প্যাকেজিং</option>
-            </select>
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-sm sm:text-base font-bold text-gray-700 dark:text-gray-200" data-i18n="labelCategory">ক্যাটাগরি</label>
+            <button 
+              type="button" 
+              onclick="window.hsApp.promptAddCustomCategory()" 
+              class="text-xs font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 flex items-center gap-1 transition-colors"
+            >
+              <i class="fa-solid fa-circle-plus"></i> <span data-i18n="addNewCategory">+ নতুন ক্যাটাগরি তৈরি করুন</span>
+            </button>
           </div>
-          <div>
-            <label class="block text-sm sm:text-base font-bold text-gray-700 dark:text-gray-200 mb-1.5" data-i18n="labelItemType">পণ্যের ধরণ</label>
-            <select id="stock-item-type" class="w-full px-4 py-2.5 sm:py-3 rounded-2xl text-sm sm:text-base bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-100 font-medium focus:ring-2 focus:ring-brand-500 outline-none transition">
-              <option value="typeRaw">কাঁচামাল (Raw Material)</option>
-              <option value="typeFinished">তৈরি খাবার (Finished Menu)</option>
-              <option value="typePackaging">প্যাকেজিং বক্স বা ব্যাগ</option>
-            </select>
-          </div>
+          <select 
+            id="stock-item-category" 
+            onchange="window.hsApp.onCategorySelectChange(this)"
+            class="w-full px-4 py-2.5 sm:py-3 rounded-2xl text-sm sm:text-base bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-100 font-medium focus:ring-2 focus:ring-brand-500 outline-none transition"
+          >
+            <!-- Dynamically populated -->
+          </select>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">

@@ -60,6 +60,7 @@ const translations = {
     btnQuickStockOut: "Stock Out (-)",
     tabAllItems: "All Items",
     tabRawMaterials: "Raw Ingredients",
+    tabFrozenFood: "Frozen Food",
     tabFinishedFood: "Finished Food",
     tabPackaging: "Packaging & Boxes",
 
@@ -202,6 +203,7 @@ const translations = {
 
     // Categories (Food & Stock)
     catRaw: "Raw Ingredients",
+    catFrozen: "Frozen Food",
     catSnacks: "Snacks & Special Bites",
     catBurgers: "Burgers & Sandwiches",
     catNoodles: "Noodles & Pasta",
@@ -209,6 +211,9 @@ const translations = {
     catDesserts: "Baked Goods & Desserts",
     catPackaging: "Packaging & Boxes",
     catBeverage: "Beverages & Drinks",
+    addNewCategory: "+ Add New Category",
+    promptNewCategory: "Enter new category name:",
+    toastCategoryAdded: "New category added successfully!",
 
     // Expense Categories
     expRawBazaar: "Raw Material & Bazaar",
@@ -407,6 +412,7 @@ const translations = {
     btnQuickStockOut: "স্টক কমান / ব্যবহার (-)",
     tabAllItems: "সকল মালামাল",
     tabRawMaterials: "কাঁচামাল",
+    tabFrozenFood: "ফ্রোজেন ফুড",
     tabFinishedFood: "তৈরি খাবার",
     tabPackaging: "বক্স ও প্যাকেট",
 
@@ -549,6 +555,7 @@ const translations = {
 
     // Categories (Food & Stock)
     catRaw: "কাঁচামাল",
+    catFrozen: "ফ্রোজেন ফুড",
     catSnacks: "স্ন্যাকস ও স্পেশাল বাইটস",
     catBurgers: "বার্গার ও স্যান্ডউইচ",
     catNoodles: "নুডুলস ও পাস্তা",
@@ -556,6 +563,9 @@ const translations = {
     catDesserts: "মিষ্টান্ন ও ডেজার্ট",
     catPackaging: "বক্স ও প্যাকেট",
     catBeverage: "পানীয় ও ড্রিঙ্কস",
+    addNewCategory: "+ নতুন ক্যাটাগরি তৈরি করুন",
+    promptNewCategory: "নতুন ক্যাটাগরির নাম লিখুন:",
+    toastCategoryAdded: "নতুন ক্যাটাগরি সফলভাবে যুক্ত হয়েছে!",
 
     // Expense Categories
     expRawBazaar: "কাঁচামাল ও বাজার",
