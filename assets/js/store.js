@@ -130,22 +130,31 @@ class DataStore {
     this.save();
   }
 
+  parseDate(dStr) {
+    if (!dStr) return new Date();
+    if (typeof dStr === "string" && /^\d{4}-\d{2}-\d{2}/.test(dStr)) {
+      const parts = dStr.split("T")[0].split("-").map(Number);
+      return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+    return new Date(dStr);
+  }
+
   // --- EXPENSES ---
   getExpenses(monthFilter = "all", yearFilter = null) {
     let list = [...(this.data.expenses || [])];
     if (monthFilter !== "all") {
       const targetMonth = Number(monthFilter);
       list = list.filter((exp) => {
-        const d = new Date(exp.date);
+        const d = this.parseDate(exp.date);
         return d.getMonth() === targetMonth;
       });
     }
     if (yearFilter && yearFilter !== "all") {
       const targetYear = Number(yearFilter);
-      list = list.filter((exp) => new Date(exp.date).getFullYear() === targetYear);
+      list = list.filter((exp) => this.parseDate(exp.date).getFullYear() === targetYear);
     }
     // Sort descending by date
-    return list.sort((a, b) => new Date(b.date) - new Date(a.date));
+    return list.sort((a, b) => this.parseDate(b.date) - this.parseDate(a.date));
   }
 
   saveExpense(expense) {
@@ -176,13 +185,13 @@ class DataStore {
     let list = [...(this.data.sales || [])];
     if (monthFilter !== "all") {
       const targetMonth = Number(monthFilter);
-      list = list.filter((sale) => new Date(sale.date).getMonth() === targetMonth);
+      list = list.filter((sale) => this.parseDate(sale.date).getMonth() === targetMonth);
     }
     if (yearFilter && yearFilter !== "all") {
       const targetYear = Number(yearFilter);
-      list = list.filter((sale) => new Date(sale.date).getFullYear() === targetYear);
+      list = list.filter((sale) => this.parseDate(sale.date).getFullYear() === targetYear);
     }
-    return list.sort((a, b) => new Date(b.date) - new Date(a.date));
+    return list.sort((a, b) => this.parseDate(b.date) - this.parseDate(a.date));
   }
 
   saveSale(sale) {
@@ -201,6 +210,10 @@ class DataStore {
     }
     this.save();
     return sale;
+  }
+
+  addSale(sale) {
+    return this.saveSale(sale);
   }
 
   deleteSale(id) {

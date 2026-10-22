@@ -913,7 +913,8 @@ class HealthSharkApp {
       let optHtml = `<option value="">-- ${window.hsI18n.t("invoiceItemSelect")} --</option>`;
       items.forEach((item) => {
         const price = item.sellingPrice || item.costPrice || 0;
-        optHtml += `<option value="${item.id}" data-name="${item.name}" data-price="${price}" data-unit="${item.unit || ""}">
+        const cost = item.costPrice || 0;
+        optHtml += `<option value="${item.id}" data-name="${item.name}" data-price="${price}" data-cost="${cost}" data-unit="${item.unit || ""}">
           ${item.name} (Tk. ${price})
         </option>`;
       });
@@ -947,6 +948,7 @@ class HealthSharkApp {
 
     let name = "";
     let unit = "";
+    let costPrice = 0;
     const selectedOpt = select ? select.selectedOptions[0] : null;
 
     if (customNameInput && customNameInput.value.trim()) {
@@ -954,10 +956,11 @@ class HealthSharkApp {
     } else if (selectedOpt && selectedOpt.value) {
       name = selectedOpt.getAttribute("data-name");
       unit = selectedOpt.getAttribute("data-unit") || "";
+      costPrice = Number(selectedOpt.getAttribute("data-cost")) || 0;
     }
 
     if (!name) {
-      this.showToast("Please select an item or enter a custom name", "warning");
+      this.showToast(window.hsI18n.currentLang === "bn" ? "আইটেম নির্বাচন করুন অথবা নাম লিখুন" : "Please select an item or enter a custom name", "warning");
       return;
     }
 
@@ -968,6 +971,7 @@ class HealthSharkApp {
       name,
       qty,
       price,
+      costPrice,
       unit
     });
 
@@ -1054,9 +1058,9 @@ class HealthSharkApp {
     }
   }
 
-  handleCreateInvoice(autoSaveToSales = false) {
+  handleCreateInvoice(printImmediately = false) {
     if (this.invoiceDraftItems.length === 0) {
-      this.showToast("Please add at least one item to the invoice", "warning");
+      this.showToast(window.hsI18n.currentLang === "bn" ? "অনুগ্রহ করে অন্তত একটি আইটেম যোগ করুন" : "Please add at least one item to the invoice", "warning");
       return;
     }
 
@@ -1092,24 +1096,53 @@ class HealthSharkApp {
       note
     });
 
-    if (autoSaveToSales && grandTotal > 0) {
-      window.hsStore.addSale({
+    // Auto-record to Sales if checkbox is checked
+    const syncCheckbox = document.getElementById("inv-sync-sales");
+    const shouldSyncToSales = syncCheckbox ? syncCheckbox.checked : true;
+
+    if (shouldSyncToSales && grandTotal > 0) {
+      const methodMap = {
+        Cash: "payCash",
+        bKash: "payBkash",
+        Nagad: "payNagad",
+        Card: "payBank",
+        Other: "payCash"
+      };
+      const method = methodMap[paymentMethod] || "payCash";
+      const totalQty = this.invoiceDraftItems.reduce((sum, i) => sum + (Number(i.qty) || 1), 0);
+      const totalCost = this.invoiceDraftItems.reduce((sum, i) => sum + ((Number(i.qty) || 1) * (Number(i.costPrice) || 0)), 0);
+      const itemsList = this.invoiceDraftItems.map((i) => `${i.name} (${i.qty})`).join(", ");
+
+      window.hsStore.saveSale({
         date,
-        itemId: null,
-        itemName: `Invoice ${newInvoice.invoiceNumber} (${customerName})`,
-        quantity: 1,
-        sellingPrice: grandTotal,
-        totalAmount: grandTotal,
-        paymentMethod,
-        note: `Customer: ${customerName} | Phone: ${customerPhone || "N/A"}`
+        item: `Invoice #${newInvoice.invoiceNumber} - ${customerName} [${itemsList}]`,
+        quantity: totalQty,
+        total: grandTotal,
+        cost: totalCost,
+        method,
+        invoiceId: newInvoice.id,
+        invoiceNumber: newInvoice.invoiceNumber
       });
-      this.showToast("Invoice created & recorded into Sales!", "success");
+
+      this.showToast(
+        window.hsI18n.currentLang === "bn"
+          ? "ইনভয়েস সংরক্ষিত এবং স্বয়ংক্রিয়ভাবে সেলসে যুক্ত হয়েছে!"
+          : "Invoice created & recorded into Sales!",
+        "success"
+      );
     } else {
-      this.showToast("Invoice created successfully!", "success");
+      this.showToast(
+        window.hsI18n.currentLang === "bn"
+          ? "ইনভয়েস সফলভাবে সংরক্ষিত হয়েছে!"
+          : "Invoice created successfully!",
+        "success"
+      );
     }
 
-    // Trigger Print Window
-    window.hsReports.printInvoiceReceipt(newInvoice);
+    // Trigger Print Window only if requested
+    if (printImmediately) {
+      window.hsReports.printInvoiceReceipt(newInvoice);
+    }
 
     // Reset Form & Update History
     this.clearInvoiceForm();
