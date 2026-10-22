@@ -715,12 +715,22 @@ class HealthSharkApp {
           ৳${Number(e.amount).toLocaleString()}
         </td>
         <td class="py-4 px-5 text-right">
-          <button 
-            onclick="window.hsApp.deleteExpensePrompt('${e.id}')"
-            class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 flex items-center justify-center text-xs sm:text-sm transition-colors ml-auto"
-          >
-            <i class="fa-solid fa-trash-can"></i>
-          </button>
+          <div class="inline-flex items-center gap-2">
+            <button 
+              onclick="window.hsApp.openEditExpenseModal('${e.id}')"
+              title="${window.hsI18n.t('editExpense')}"
+              class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 flex items-center justify-center text-xs sm:text-sm transition-colors"
+            >
+              <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+            <button 
+              onclick="window.hsApp.deleteExpensePrompt('${e.id}')"
+              title="${window.hsI18n.t('btnDelete')}"
+              class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 flex items-center justify-center text-xs sm:text-sm transition-colors"
+            >
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
         </td>
       </tr>
     `).join("");
@@ -774,12 +784,22 @@ class HealthSharkApp {
             ৳${netGain.toLocaleString()}
           </td>
           <td class="py-4 px-5 text-right">
-            <button 
-              onclick="window.hsApp.deleteSalePrompt('${s.id}')"
-              class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 flex items-center justify-center text-xs sm:text-sm transition-colors ml-auto"
-            >
-              <i class="fa-solid fa-trash-can"></i>
-            </button>
+            <div class="inline-flex items-center gap-2">
+              <button 
+                onclick="window.hsApp.openEditSaleModal('${s.id}')"
+                title="${window.hsI18n.t('editSale')}"
+                class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 flex items-center justify-center text-xs sm:text-sm transition-colors"
+              >
+                <i class="fa-solid fa-pen-to-square"></i>
+              </button>
+              <button 
+                onclick="window.hsApp.deleteSalePrompt('${s.id}')"
+                title="${window.hsI18n.t('btnDelete')}"
+                class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 flex items-center justify-center text-xs sm:text-sm transition-colors"
+              >
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
           </td>
         </tr>
       `;
@@ -1746,13 +1766,35 @@ class HealthSharkApp {
 
   // Expense Modal
   openAddExpenseModal() {
+    const titleEl = document.getElementById("modal-expense-title");
+    if (titleEl) titleEl.textContent = window.hsI18n.t("modalAddExpenseTitle");
     document.getElementById("expense-form").reset();
+    document.getElementById("expense-id").value = "";
     document.getElementById("expense-date").value = new Date().toISOString().split("T")[0];
+    this.openModal("modal-expense");
+  }
+
+  openEditExpenseModal(id) {
+    const exp = window.hsStore.getExpenseById(id);
+    if (!exp) return;
+
+    const titleEl = document.getElementById("modal-expense-title");
+    if (titleEl) titleEl.textContent = window.hsI18n.t("modalEditExpenseTitle");
+
+    document.getElementById("expense-id").value = exp.id;
+    document.getElementById("expense-date").value = exp.date;
+    document.getElementById("expense-category").value = exp.category;
+    document.getElementById("expense-title").value = exp.title;
+    document.getElementById("expense-vendor").value = exp.vendor || "";
+    document.getElementById("expense-method").value = exp.method;
+    document.getElementById("expense-amount").value = exp.amount;
+
     this.openModal("modal-expense");
   }
 
   saveExpenseForm(e) {
     e.preventDefault();
+    const id = document.getElementById("expense-id").value;
     const date = document.getElementById("expense-date").value;
     const category = document.getElementById("expense-category").value;
     const title = document.getElementById("expense-title").value.trim();
@@ -1762,9 +1804,9 @@ class HealthSharkApp {
 
     if (!title || amount <= 0) return;
 
-    window.hsStore.saveExpense({ date, category, title, vendor, method, amount });
+    window.hsStore.saveExpense({ id: id || undefined, date, category, title, vendor, method, amount });
     this.closeModal("modal-expense");
-    this.showToast(window.hsI18n.t("toastExpenseSaved"));
+    this.showToast(id ? window.hsI18n.t("toastExpenseUpdated") : window.hsI18n.t("toastExpenseSaved"));
   }
 
   deleteExpensePrompt(id) {
@@ -1774,28 +1816,63 @@ class HealthSharkApp {
   }
 
   // Sale Modal
-  openAddSaleModal() {
-    document.getElementById("sale-form").reset();
-    document.getElementById("sale-date").value = new Date().toISOString().split("T")[0];
-
-    // Populate dropdown with finished food items
+  populateSaleFoodSelect(selectedItemName = "") {
     const foodSelect = document.getElementById("sale-food-select");
     if (foodSelect) {
       const items = window.hsStore.getItems({ type: "typeFinished" });
       foodSelect.innerHTML = items
-        .map((i) => `<option value="${i.name}" data-price="${i.sellingPrice}" data-cost="${i.costPrice}">${i.name} (৳${i.sellingPrice})</option>`)
+        .map((i) => `<option value="${i.name}" data-price="${i.sellingPrice}" data-cost="${i.costPrice}" ${i.name === selectedItemName ? "selected" : ""}>${i.name} (৳${i.sellingPrice})</option>`)
         .join("");
     }
+  }
+
+  openAddSaleModal() {
+    const titleEl = document.getElementById("modal-sale-title");
+    if (titleEl) titleEl.textContent = window.hsI18n.t("modalAddSaleTitle");
+
+    document.getElementById("sale-form").reset();
+    document.getElementById("sale-id").value = "";
+    document.getElementById("sale-date").value = new Date().toISOString().split("T")[0];
+
+    this.populateSaleFoodSelect();
+    this.openModal("modal-sale");
+  }
+
+  openEditSaleModal(id) {
+    const sale = window.hsStore.getSaleById(id);
+    if (!sale) return;
+
+    const titleEl = document.getElementById("modal-sale-title");
+    if (titleEl) titleEl.textContent = window.hsI18n.t("modalEditSaleTitle");
+
+    document.getElementById("sale-id").value = sale.id;
+    document.getElementById("sale-date").value = sale.date;
+
+    this.populateSaleFoodSelect(sale.item);
+
+    const foodSelect = document.getElementById("sale-food-select");
+    const customItem = document.getElementById("sale-item-custom");
+    if (foodSelect && foodSelect.value === sale.item) {
+      if (customItem) customItem.value = "";
+    } else {
+      if (customItem) customItem.value = sale.item;
+    }
+
+    document.getElementById("sale-qty").value = sale.quantity;
+    document.getElementById("sale-total").value = sale.total;
+    document.getElementById("sale-cost").value = sale.cost || "";
+    document.getElementById("sale-method").value = sale.method || "payCash";
 
     this.openModal("modal-sale");
   }
 
   saveSaleForm(e) {
     e.preventDefault();
+    const id = document.getElementById("sale-id").value;
     const date = document.getElementById("sale-date").value;
     const foodSelect = document.getElementById("sale-food-select");
     const customItem = document.getElementById("sale-item-custom");
-    const item = (foodSelect ? foodSelect.value : "") || (customItem ? customItem.value.trim() : "");
+    const item = (customItem && customItem.value.trim()) || (foodSelect ? foodSelect.value : "");
     const quantity = Number(document.getElementById("sale-qty").value) || 1;
     const total = Number(document.getElementById("sale-total").value) || 0;
     const cost = Number(document.getElementById("sale-cost").value) || 0;
@@ -1803,9 +1880,9 @@ class HealthSharkApp {
 
     if (!item || total <= 0) return;
 
-    window.hsStore.saveSale({ date, item, quantity, total, cost, method });
+    window.hsStore.saveSale({ id: id || undefined, date, item, quantity, total, cost, method });
     this.closeModal("modal-sale");
-    this.showToast(window.hsI18n.t("toastSaleSaved"));
+    this.showToast(id ? window.hsI18n.t("toastSaleUpdated") : window.hsI18n.t("toastSaleSaved"));
   }
 
   deleteSalePrompt(id) {

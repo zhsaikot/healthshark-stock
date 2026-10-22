@@ -219,6 +219,10 @@ class DataStore {
     return list.sort((a, b) => this.parseDate(b.date) - this.parseDate(a.date));
   }
 
+  getExpenseById(id) {
+    return (this.data.expenses || []).find((e) => e.id === id);
+  }
+
   saveExpense(expense) {
     if (!expense.id) {
       expense.id = "exp-" + Date.now();
@@ -228,6 +232,7 @@ class DataStore {
       const idx = this.data.expenses.findIndex((e) => e.id === expense.id);
       if (idx !== -1) {
         this.data.expenses[idx] = { ...this.data.expenses[idx], ...expense };
+        this.addActivity(`Updated expense: ৳${expense.amount} for ${expense.title}`, "expense");
       } else {
         this.data.expenses.push(expense);
         this.addActivity(`Recorded expense: ৳${expense.amount} for ${expense.title}`, "expense");
@@ -256,6 +261,10 @@ class DataStore {
     return list.sort((a, b) => this.parseDate(b.date) - this.parseDate(a.date));
   }
 
+  getSaleById(id) {
+    return (this.data.sales || []).find((s) => s.id === id);
+  }
+
   saveSale(sale) {
     if (!sale.id) {
       sale.id = "sale-" + Date.now();
@@ -265,6 +274,7 @@ class DataStore {
       const idx = this.data.sales.findIndex((s) => s.id === sale.id);
       if (idx !== -1) {
         this.data.sales[idx] = { ...this.data.sales[idx], ...sale };
+        this.addActivity(`Updated sale: ৳${sale.total} (${sale.item})`, "sale");
       } else {
         this.data.sales.push(sale);
         this.addActivity(`Recorded sale: ৳${sale.total} (${sale.item})`, "sale");
