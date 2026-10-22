@@ -15,6 +15,7 @@ class HealthSharkApp {
 
     // Invoice Draft & State
     this.invoiceDraftItems = [];
+    this.editingInvoiceId = null;
 
     // Calculator State
     this.calcCurrentValue = "0";
@@ -1058,6 +1059,64 @@ class HealthSharkApp {
     }
   }
 
+  editInvoice(id) {
+    const inv = window.hsStore.getInvoiceById(id);
+    if (!inv) return;
+
+    this.editingInvoiceId = id;
+
+    // Switch to Invoice tab if not already active
+    if (this.currentTab !== "invoice") {
+      this.switchTab("invoice");
+    }
+
+    // Populate Fields
+    document.getElementById("inv-number").value = inv.invoiceNumber;
+    document.getElementById("inv-date").value = inv.date;
+    document.getElementById("inv-order-type").value = inv.orderType || "Dine-in";
+    document.getElementById("inv-customer-name").value = inv.customerName || "";
+    document.getElementById("inv-customer-phone").value = inv.customerPhone || "";
+    document.getElementById("inv-discount").value = inv.discount || 0;
+    document.getElementById("inv-delivery").value = inv.deliveryFee || 0;
+    document.getElementById("inv-paid").value = inv.paidAmount || 0;
+    document.getElementById("inv-payment-method").value = inv.paymentMethod || "Cash";
+    document.getElementById("inv-note").value = inv.note || "";
+
+    // Draft items
+    this.invoiceDraftItems = (inv.items || []).map((item) => ({
+      name: item.name,
+      qty: item.qty,
+      price: item.price,
+      costPrice: item.costPrice || 0,
+      unit: item.unit || ""
+    }));
+
+    this.renderInvoiceDraftItems();
+    this.calculateInvoiceTotals();
+
+    // Show editing banner & update button texts
+    const banner = document.getElementById("inv-editing-banner");
+    const bannerNumber = document.getElementById("inv-editing-number");
+    if (banner) banner.classList.remove("hidden");
+    if (bannerNumber) bannerNumber.textContent = inv.invoiceNumber;
+
+    const savePrintSpan = document.getElementById("inv-btn-save-print-span");
+    const saveOnlySpan = document.getElementById("inv-btn-save-only-span");
+    if (savePrintSpan) savePrintSpan.textContent = window.hsI18n.t("btnUpdateAndPrintInvoice");
+    if (saveOnlySpan) saveOnlySpan.textContent = window.hsI18n.t("btnUpdateOnlyInvoice");
+
+    // Scroll up smoothly to invoice form
+    const tabInvoice = document.getElementById("tab-invoice");
+    if (tabInvoice) {
+      tabInvoice.scrollIntoView({ behavior: "smooth" });
+    }
+  }
+
+  cancelInvoiceEdit() {
+    this.editingInvoiceId = null;
+    this.clearInvoiceForm();
+  }
+
   handleCreateInvoice(printImmediately = false) {
     if (this.invoiceDraftItems.length === 0) {
       this.showToast(window.hsI18n.currentLang === "bn" ? "অনুগ্রহ করে অন্তত একটি আইটেম যোগ করুন" : "Please add at least one item to the invoice", "warning");
@@ -1079,28 +1138,48 @@ class HealthSharkApp {
     const paidAmount = Math.max(0, Number(document.getElementById("inv-paid").value) || 0);
     const dueAmount = Math.max(0, grandTotal - paidAmount);
 
-    const newInvoice = window.hsStore.addInvoice({
-      invoiceNumber: invNumber,
-      customerName,
-      customerPhone,
-      orderType,
-      date,
-      items: [...this.invoiceDraftItems],
-      subtotal,
-      discount,
-      deliveryFee,
-      grandTotal,
-      paidAmount,
-      dueAmount,
-      paymentMethod,
-      note
-    });
+    let targetInvoice = null;
+
+    if (this.editingInvoiceId) {
+      targetInvoice = window.hsStore.updateInvoice(this.editingInvoiceId, {
+        customerName,
+        customerPhone,
+        orderType,
+        date,
+        items: [...this.invoiceDraftItems],
+        subtotal,
+        discount,
+        deliveryFee,
+        grandTotal,
+        paidAmount,
+        dueAmount,
+        paymentMethod,
+        note
+      });
+    } else {
+      targetInvoice = window.hsStore.addInvoice({
+        invoiceNumber: invNumber,
+        customerName,
+        customerPhone,
+        orderType,
+        date,
+        items: [...this.invoiceDraftItems],
+        subtotal,
+        discount,
+        deliveryFee,
+        grandTotal,
+        paidAmount,
+        dueAmount,
+        paymentMethod,
+        note
+      });
+    }
 
     // Auto-record to Sales if checkbox is checked
     const syncCheckbox = document.getElementById("inv-sync-sales");
     const shouldSyncToSales = syncCheckbox ? syncCheckbox.checked : true;
 
-    if (shouldSyncToSales && grandTotal > 0) {
+    if (shouldSyncToSales && grandTotal > 0 && targetInvoice) {
       const methodMap = {
         Cash: "payCash",
         bKash: "payBkash",
@@ -1113,35 +1192,43 @@ class HealthSharkApp {
       const totalCost = this.invoiceDraftItems.reduce((sum, i) => sum + ((Number(i.qty) || 1) * (Number(i.costPrice) || 0)), 0);
       const itemsList = this.invoiceDraftItems.map((i) => `${i.name} (${i.qty})`).join(", ");
 
-      window.hsStore.saveSale({
+      const saleData = {
         date,
-        item: `Invoice #${newInvoice.invoiceNumber} - ${customerName} [${itemsList}]`,
+        item: `Invoice #${targetInvoice.invoiceNumber} - ${customerName} [${itemsList}]`,
         quantity: totalQty,
         total: grandTotal,
         cost: totalCost,
-        method,
-        invoiceId: newInvoice.id,
-        invoiceNumber: newInvoice.invoiceNumber
-      });
+        method
+      };
+
+      if (this.editingInvoiceId) {
+        window.hsStore.updateLinkedSale(targetInvoice.id, targetInvoice.invoiceNumber, saleData);
+      } else {
+        window.hsStore.saveSale({
+          ...saleData,
+          invoiceId: targetInvoice.id,
+          invoiceNumber: targetInvoice.invoiceNumber
+        });
+      }
 
       this.showToast(
-        window.hsI18n.currentLang === "bn"
-          ? "ইনভয়েস সংরক্ষিত এবং স্বয়ংক্রিয়ভাবে সেলসে যুক্ত হয়েছে!"
-          : "Invoice created & recorded into Sales!",
+        this.editingInvoiceId
+          ? (window.hsI18n.currentLang === "bn" ? "ইনভয়েস ও সেলস তথ্য সফলভাবে হালনাগাদ হয়েছে!" : "Invoice and sales record updated!")
+          : (window.hsI18n.currentLang === "bn" ? "ইনভয়েস সংরক্ষিত এবং স্বয়ংক্রিয়ভাবে সেলসে যুক্ত হয়েছে!" : "Invoice created & recorded into Sales!"),
         "success"
       );
     } else {
       this.showToast(
-        window.hsI18n.currentLang === "bn"
-          ? "ইনভয়েস সফলভাবে সংরক্ষিত হয়েছে!"
-          : "Invoice created successfully!",
+        this.editingInvoiceId
+          ? (window.hsI18n.currentLang === "bn" ? "ইনভয়েস সফলভাবে হালনাগাদ হয়েছে!" : "Invoice updated successfully!")
+          : (window.hsI18n.currentLang === "bn" ? "ইনভয়েস সফলভাবে সংরক্ষিত হয়েছে!" : "Invoice created successfully!"),
         "success"
       );
     }
 
     // Trigger Print Window only if requested
-    if (printImmediately) {
-      window.hsReports.printInvoiceReceipt(newInvoice);
+    if (printImmediately && targetInvoice) {
+      window.hsReports.printInvoiceReceipt(targetInvoice);
     }
 
     // Reset Form & Update History
@@ -1150,6 +1237,7 @@ class HealthSharkApp {
   }
 
   clearInvoiceForm() {
+    this.editingInvoiceId = null;
     this.invoiceDraftItems = [];
     document.getElementById("inv-number").value = window.hsStore.getNextInvoiceNumber();
     document.getElementById("inv-customer-name").value = "";
@@ -1161,6 +1249,16 @@ class HealthSharkApp {
     document.getElementById("inv-delivery").value = "0";
     document.getElementById("inv-paid").value = "0";
     document.getElementById("inv-note").value = "";
+
+    // Reset editing banner & button texts
+    const banner = document.getElementById("inv-editing-banner");
+    if (banner) banner.classList.add("hidden");
+
+    const savePrintSpan = document.getElementById("inv-btn-save-print-span");
+    const saveOnlySpan = document.getElementById("inv-btn-save-only-span");
+    if (savePrintSpan) savePrintSpan.textContent = window.hsI18n.t("btnSaveAndPrintInvoice");
+    if (saveOnlySpan) saveOnlySpan.textContent = window.hsI18n.t("btnSaveOnlyInvoice");
+
     this.renderInvoiceDraftItems();
     this.calculateInvoiceTotals();
   }
@@ -1203,6 +1301,9 @@ class HealthSharkApp {
           </span>
         </td>
         <td class="py-3 px-3 text-right space-x-1">
+          <button onclick="window.hsApp.editInvoice('${inv.id}')" title="${window.hsI18n.t('editInvoice') || 'Edit Invoice'}" class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950 dark:hover:bg-amber-900 text-amber-700 dark:text-amber-300 font-bold text-xs transition-colors">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </button>
           <button onclick="window.hsApp.reprintInvoice('${inv.id}')" title="Print Invoice" class="px-2.5 py-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 dark:bg-brand-950 dark:hover:bg-brand-900 text-brand-700 dark:text-brand-300 font-bold text-xs transition-colors">
             <i class="fa-solid fa-print"></i>
           </button>
@@ -1227,8 +1328,11 @@ class HealthSharkApp {
   deleteInvoiceRecord(id) {
     if (confirm(window.hsI18n.t("confirmDelete"))) {
       window.hsStore.deleteInvoice(id);
+      if (this.editingInvoiceId === id) {
+        this.clearInvoiceForm();
+      }
       this.renderInvoicesHistoryTable();
-      this.showToast("Invoice deleted", "info");
+      this.showToast(window.hsI18n.currentLang === "bn" ? "ইনভয়েস মুছে ফেলা হয়েছে" : "Invoice deleted", "info");
     }
   }
 

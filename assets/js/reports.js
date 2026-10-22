@@ -779,6 +779,8 @@ class ReportsEngine {
       )
       .join("");
 
+    const logoSrc = this.logoBase64 || "assets/images/logo.png";
+
     const htmlContent = `
 <!DOCTYPE html>
 <html>
@@ -790,6 +792,7 @@ class ReportsEngine {
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; margin: 0; padding: 20px; }
     .invoice-card { max-width: 550px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
     .header { text-align: center; border-bottom: 2px solid #15803d; padding-bottom: 16px; margin-bottom: 16px; }
+    .brand-logo { height: 60px; width: auto; object-fit: contain; margin-bottom: 8px; display: inline-block; }
     .brand-title { font-size: 26px; font-weight: 900; color: #14532d; margin: 0; }
     .brand-sub { font-size: 12px; color: #15803d; font-weight: 700; text-transform: uppercase; margin-top: 2px; }
     .brand-contact { font-size: 12px; color: #64748b; margin-top: 4px; }
@@ -815,6 +818,7 @@ class ReportsEngine {
   </div>
   <div class="invoice-card">
     <div class="header">
+      <img src="${logoSrc}" alt="Health Shark Logo" class="brand-logo" onerror="this.style.display='none'" />
       <h1 class="brand-title">HEALTH SHARK</h1>
       <div class="brand-sub">Fresh & Healthy Cloud Kitchen</div>
       <div class="brand-contact">Mirpur, Dhaka • Hotline: 01789-474381</div>

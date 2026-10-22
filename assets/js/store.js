@@ -377,6 +377,53 @@ class DataStore {
     return newInvoice;
   }
 
+  getInvoiceById(id) {
+    this.data.invoices = this.data.invoices || [];
+    return this.data.invoices.find((inv) => inv.id === id);
+  }
+
+  updateInvoice(id, updatedFields) {
+    this.data.invoices = this.data.invoices || [];
+    const idx = this.data.invoices.findIndex((inv) => inv.id === id);
+    if (idx === -1) return null;
+
+    const existing = this.data.invoices[idx];
+    const updated = {
+      ...existing,
+      ...updatedFields,
+      updatedAt: new Date().toISOString()
+    };
+    this.data.invoices[idx] = updated;
+    this.addActivity(`Updated Invoice ${updated.invoiceNumber} (৳${updated.grandTotal})`, "info");
+    this.save();
+    return updated;
+  }
+
+  updateLinkedSale(invoiceId, invoiceNumber, saleData) {
+    this.data.sales = this.data.sales || [];
+    const idx = this.data.sales.findIndex(
+      (s) => s.invoiceId === invoiceId || s.invoiceNumber === invoiceNumber
+    );
+
+    if (idx !== -1) {
+      this.data.sales[idx] = {
+        ...this.data.sales[idx],
+        ...saleData,
+        invoiceId,
+        invoiceNumber
+      };
+      this.addActivity(`Updated sale record for Invoice ${invoiceNumber}: ৳${saleData.total}`, "sale");
+      this.save();
+      return this.data.sales[idx];
+    } else {
+      return this.saveSale({
+        ...saleData,
+        invoiceId,
+        invoiceNumber
+      });
+    }
+  }
+
   deleteInvoice(id) {
     this.data.invoices = this.data.invoices || [];
     const idx = this.data.invoices.findIndex((inv) => inv.id === id);
