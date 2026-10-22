@@ -995,7 +995,7 @@ class HealthSharkApp {
       tbody.innerHTML = `
         <tr>
           <td colspan="6" class="py-6 text-center text-xs text-gray-400 dark:text-gray-500 font-medium">
-            No items added yet. Choose a menu item above and click "Add Item".
+            ${window.hsI18n.t("noItemsAddedYet")}
           </td>
         </tr>
       `;
@@ -1130,7 +1130,7 @@ class HealthSharkApp {
       tbody.innerHTML = `
         <tr>
           <td colspan="7" class="py-8 text-center text-xs sm:text-sm text-gray-400 dark:text-gray-500 font-medium">
-            No invoices generated yet. Create customer bills above to build invoice history.
+            ${window.hsI18n.t("noInvoicesYet")}
           </td>
         </tr>
       `;
@@ -1155,7 +1155,7 @@ class HealthSharkApp {
         <td class="py-3 px-3 text-right font-black text-gray-900 dark:text-gray-100">৳${Number(inv.grandTotal).toLocaleString()}</td>
         <td class="py-3 px-3 text-center">
           <span class="px-2 py-0.5 rounded-full text-[11px] font-bold ${inv.dueAmount > 0 ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"}">
-            ${inv.dueAmount > 0 ? "Due: ৳" + inv.dueAmount.toLocaleString() : "Paid"}
+            ${inv.dueAmount > 0 ? window.hsI18n.t("statusDue") + ": ৳" + Number(inv.dueAmount).toLocaleString() : window.hsI18n.t("statusPaid")}
           </span>
         </td>
         <td class="py-3 px-3 text-right space-x-1">
@@ -1336,7 +1336,7 @@ class HealthSharkApp {
     if (this.calcHistoryTape.length === 0) {
       tapeContainer.innerHTML = `
         <div class="py-8 text-center text-xs text-gray-400 dark:text-gray-500 font-medium">
-          No recent calculations. Key in numbers to see tape history.
+          ${window.hsI18n.t("noCalcHistoryYet")}
         </div>
       `;
       return;

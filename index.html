@@ -820,7 +820,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label class="block text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5" data-i18n="invoiceNumber">ইনভয়েস নং</label>
+                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="invoiceNumber">ইনভয়েস নং</label>
                 <input 
                   type="text" 
                   id="inv-number" 
@@ -829,7 +829,7 @@
                 />
               </div>
               <div>
-                <label class="block text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5" data-i18n="invoiceDate">তারিখ</label>
+                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="invoiceDate">তারিখ</label>
                 <input 
                   type="date" 
                   id="inv-date" 
@@ -837,7 +837,7 @@
                 />
               </div>
               <div>
-                <label class="block text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5" data-i18n="orderType">অর্ডারের ধরন</label>
+                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="orderType">অর্ডারের ধরন</label>
                 <select 
                   id="inv-order-type" 
                   class="w-full px-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-slate-900/60 text-gray-800 dark:text-gray-100 font-semibold text-sm border border-gray-200 dark:border-slate-700 focus:ring-2 focus:ring-brand-500 outline-none transition"
@@ -851,7 +851,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5" data-i18n="customerName">গ্রাহকের নাম</label>
+                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="customerName">গ্রাহকের নাম</label>
                 <input 
                   type="text" 
                   id="inv-customer-name" 
@@ -860,7 +860,7 @@
                 />
               </div>
               <div>
-                <label class="block text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5" data-i18n="customerPhone">মোবাইল নম্বর</label>
+                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="customerPhone">মোবাইল নম্বর</label>
                 <input 
                   type="tel" 
                   id="inv-customer-phone" 
@@ -871,7 +871,7 @@
             </div>
 
             <div>
-              <label class="block text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5" data-i18n="customerAddress">ঠিকানা / টেবিল নং / ডেলিভারি লোকেশন</label>
+              <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="customerAddress">ঠিকানা / টেবিল নং / ডেলিভারি লোকেশন</label>
               <input 
                 type="text" 
                 id="inv-customer-address" 
@@ -889,7 +889,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
               <div class="sm:col-span-5">
-                <label class="block text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5" data-i18n="selectFoodItem">মেনু থেকে নির্বাচন</label>
+                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="selectFoodItem">মেনু থেকে নির্বাচন</label>
                 <select 
                   id="inv-item-select" 
                   onchange="window.hsApp.onInvoiceItemSelectChange()"
@@ -900,7 +900,7 @@
               </div>
 
               <div class="sm:col-span-3">
-                <label class="block text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5" data-i18n="itemCustomName">নাম (কাস্টম)</label>
+                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="itemCustomName">নাম (কাস্টম)</label>
                 <input 
                   type="text" 
                   id="inv-custom-name" 
@@ -910,7 +910,7 @@
               </div>
 
               <div class="sm:col-span-2">
-                <label class="block text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5" data-i18n="itemPrice">মূল্য (৳)</label>
+                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="itemPrice">মূল্য (৳)</label>
                 <input 
                   type="number" 
                   id="inv-item-price" 
@@ -922,7 +922,7 @@
               </div>
 
               <div class="sm:col-span-2">
-                <label class="block text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5" data-i18n="itemQuantity">পরিমাণ</label>
+                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="itemQuantity">পরিমাণ</label>
                 <div class="flex items-center gap-1.5">
                   <input 
                     type="number" 
@@ -949,7 +949,7 @@
               <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-xs sm:text-sm">
                   <thead>
-                    <tr class="bg-gray-50 dark:bg-slate-800/60 border-b border-gray-200 dark:border-slate-800 text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">
+                    <tr class="bg-gray-50 dark:bg-slate-800/60 border-b border-gray-200 dark:border-slate-800 text-gray-600 dark:text-gray-300 font-bold">
                       <th class="py-3 px-3.5" data-i18n="invoiceColItem">আইটেম</th>
                       <th class="py-3 px-3.5 text-right" data-i18n="invoiceColPrice">দর (৳)</th>
                       <th class="py-3 px-3.5 text-center" data-i18n="invoiceColQty">পরিমাণ</th>
@@ -966,7 +966,7 @@
 
             <!-- Notes -->
             <div>
-              <label class="block text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5" data-i18n="invoiceNotes">মন্তব্য / বিশেষ অনুরোধ</label>
+              <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="invoiceNotes">মন্তব্য / বিশেষ অনুরোধ</label>
               <textarea 
                 id="inv-note" 
                 rows="2" 
@@ -1107,7 +1107,7 @@
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse">
             <thead>
-              <tr class="bg-gray-50/80 dark:bg-slate-800/60 border-b border-gray-200 dark:border-slate-800 text-xs sm:text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <tr class="bg-gray-50/80 dark:bg-slate-800/60 border-b border-gray-200 dark:border-slate-800 text-xs sm:text-sm font-bold text-gray-600 dark:text-gray-300">
                 <th class="py-4 px-5" data-i18n="thInvNumber">ইনভয়েস নং</th>
                 <th class="py-4 px-5" data-i18n="thInvDate">তারিখ</th>
                 <th class="py-4 px-5" data-i18n="thInvCustomer">গ্রাহক</th>
