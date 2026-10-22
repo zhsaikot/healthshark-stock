@@ -110,13 +110,13 @@ class ReportsEngine {
     doc.setFontSize(20);
     doc.text("HEALTH SHARK", 44, 15);
 
-    doc.setFontSize(9.5);
+    doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     doc.text("Healthy Food Store & Kitchen | Dhaka, Bangladesh", 44, 21);
-    doc.text("Mirpur Area | Hotline: 01789-474381 | Web: zhsaikot.github.io/healthshark", 44, 26);
+    doc.text("Mirpur Area | Hotline: 01789-474381", 44, 26);
 
     doc.setFontSize(8.5);
-    doc.text(`Generated: ${dateString}`, 150, 26);
+    doc.text(`Generated: ${dateString}`, 196, 26, { align: "right" });
 
     // Subheader section
     doc.setTextColor(20, 83, 45);
