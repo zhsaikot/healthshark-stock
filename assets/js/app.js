@@ -361,18 +361,18 @@ class HealthSharkApp {
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              labels: { color: textColor, font: { family: "Plus Jakarta Sans", size: 11, weight: "600" } }
+              labels: { color: textColor, font: { family: "Plus Jakarta Sans", size: 13, weight: "700" } }
             }
           },
           scales: {
             x: {
-              ticks: { color: textColor, font: { size: 10 } },
+              ticks: { color: textColor, font: { size: 12, weight: "600" } },
               grid: { display: false }
             },
             y: {
               ticks: {
                 color: textColor,
-                font: { size: 10 },
+                font: { size: 12, weight: "600" },
                 callback: (val) => `৳${val.toLocaleString()}`
               },
               grid: { color: gridColor }
@@ -426,10 +426,10 @@ class HealthSharkApp {
           plugins: {
             legend: {
               position: "bottom",
-              labels: { color: textColor, font: { family: "Plus Jakarta Sans", size: 10, weight: "600" }, boxWidth: 12 }
+              labels: { color: textColor, font: { family: "Plus Jakarta Sans", size: 12, weight: "700" }, boxWidth: 14 }
             }
           },
-          cutout: "65%"
+          cutout: "55%"
         }
       });
     }
@@ -449,8 +449,8 @@ class HealthSharkApp {
     if (items.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="9" class="py-12 text-center text-gray-400 dark:text-gray-500 text-sm">
-            <i class="fa-solid fa-box-open text-3xl mb-2 block opacity-40"></i>
+          <td colspan="9" class="py-16 text-center text-gray-400 dark:text-gray-500 text-sm">
+            <i class="fa-solid fa-box-open text-4xl mb-3 block opacity-40"></i>
             <span data-i18n="emptyTable">${window.hsI18n.t("emptyTable")}</span>
           </td>
         </tr>
@@ -467,70 +467,70 @@ class HealthSharkApp {
 
       let statusBadge = "";
       if (qty === 0) {
-        statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300 flex items-center gap-1 w-max"><span class="w-1.5 h-1.5 rounded-full bg-red-600"></span> ${window.hsI18n.t("statusOutOfStock")}</span>`;
+        statusBadge = `<span class="px-3 py-1.5 rounded-full text-xs font-bold bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300 flex items-center gap-1.5 w-max"><span class="w-2 h-2 rounded-full bg-red-600"></span> ${window.hsI18n.t("statusOutOfStock")}</span>`;
       } else if (qty <= threshold) {
-        statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 flex items-center gap-1 w-max"><span class="w-1.5 h-1.5 rounded-full bg-amber-600 animate-ping"></span> ${window.hsI18n.t("statusLowStock")}</span>`;
+        statusBadge = `<span class="px-3 py-1.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 flex items-center gap-1.5 w-max"><span class="w-2 h-2 rounded-full bg-amber-600 animate-ping"></span> ${window.hsI18n.t("statusLowStock")}</span>`;
       } else {
-        statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 flex items-center gap-1 w-max"><span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> ${window.hsI18n.t("statusInStock")}</span>`;
+        statusBadge = `<span class="px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 flex items-center gap-1.5 w-max"><span class="w-2 h-2 rounded-full bg-emerald-600"></span> ${window.hsI18n.t("statusInStock")}</span>`;
       }
 
       return `
         <tr class="table-hover-row border-b border-gray-100 dark:border-slate-800 transition-colors">
-          <td class="py-3 px-4">
-            <div class="font-bold text-gray-900 dark:text-gray-100 text-sm">${item.name}</div>
-            <div class="text-[11px] text-gray-400">ID: ${item.id}</div>
+          <td class="py-4 px-5">
+            <div class="font-bold text-gray-900 dark:text-gray-100 text-sm sm:text-base">${item.name}</div>
+            <div class="text-xs text-gray-400 mt-0.5">ID: ${item.id}</div>
           </td>
-          <td class="py-3 px-4 text-xs font-medium text-gray-600 dark:text-gray-300">
+          <td class="py-4 px-5 text-sm font-semibold text-gray-700 dark:text-gray-300">
             ${window.hsI18n.t(item.category) || item.category}
           </td>
-          <td class="py-3 px-4 text-xs font-medium text-gray-500">
+          <td class="py-4 px-5 text-sm font-medium text-gray-500">
             ${window.hsI18n.t(item.unit) || item.unit}
           </td>
-          <td class="py-3 px-4 text-sm font-extrabold ${qty <= threshold ? "text-amber-600 dark:text-amber-400" : "text-gray-800 dark:text-gray-200"}">
+          <td class="py-4 px-5 text-base font-black ${qty <= threshold ? "text-amber-600 dark:text-amber-400" : "text-gray-900 dark:text-gray-100"}">
             ${qty}
           </td>
-          <td class="py-3 px-4 text-xs text-gray-500">
+          <td class="py-4 px-5 text-sm text-gray-500 font-medium">
             ${threshold}
           </td>
-          <td class="py-3 px-4 text-xs font-semibold text-gray-700 dark:text-gray-300">
+          <td class="py-4 px-5 text-sm font-bold text-gray-700 dark:text-gray-300">
             ৳${cost.toLocaleString()}
           </td>
-          <td class="py-3 px-4 text-xs font-semibold text-gray-700 dark:text-gray-300">
+          <td class="py-4 px-5 text-sm font-bold text-gray-700 dark:text-gray-300">
             ${sell > 0 ? `৳${sell.toLocaleString()}` : `<span class="text-gray-300 dark:text-gray-600">-</span>`}
           </td>
-          <td class="py-3 px-4 text-sm font-bold text-brand-800 dark:text-brand-300">
+          <td class="py-4 px-5 text-base font-black text-brand-800 dark:text-brand-300">
             ৳${totalVal.toLocaleString()}
           </td>
-          <td class="py-3 px-4">
+          <td class="py-4 px-5">
             ${statusBadge}
           </td>
-          <td class="py-3 px-4 text-right">
-            <div class="inline-flex items-center gap-1">
+          <td class="py-4 px-5 text-right">
+            <div class="inline-flex items-center gap-1.5">
               <button 
                 onclick="window.hsApp.openQuickStockModal('${item.id}', 1)"
                 title="Stock In (+)"
-                class="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-xs transition-colors"
+                class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-xs sm:text-sm transition-colors"
               >
                 <i class="fa-solid fa-plus"></i>
               </button>
               <button 
                 onclick="window.hsApp.openQuickStockModal('${item.id}', -1)"
                 title="Stock Out (-)"
-                class="w-7 h-7 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/40 text-amber-700 dark:text-amber-400 flex items-center justify-center text-xs transition-colors"
+                class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/40 text-amber-700 dark:text-amber-400 flex items-center justify-center text-xs sm:text-sm transition-colors"
               >
                 <i class="fa-solid fa-minus"></i>
               </button>
               <button 
                 onclick="window.hsApp.openEditItemModal('${item.id}')"
                 title="Edit"
-                class="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 flex items-center justify-center text-xs transition-colors"
+                class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 flex items-center justify-center text-xs sm:text-sm transition-colors"
               >
                 <i class="fa-solid fa-pen-to-square"></i>
               </button>
               <button 
                 onclick="window.hsApp.deleteItemPrompt('${item.id}')"
                 title="Delete"
-                class="w-7 h-7 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 flex items-center justify-center text-xs transition-colors"
+                class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 flex items-center justify-center text-xs sm:text-sm transition-colors"
               >
                 <i class="fa-solid fa-trash-can"></i>
               </button>
@@ -557,8 +557,8 @@ class HealthSharkApp {
     if (expenses.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" class="py-12 text-center text-gray-400 dark:text-gray-500 text-sm">
-            <i class="fa-solid fa-receipt text-3xl mb-2 block opacity-40"></i>
+          <td colspan="7" class="py-16 text-center text-gray-400 dark:text-gray-500 text-sm">
+            <i class="fa-solid fa-receipt text-4xl mb-3 block opacity-40"></i>
             <span data-i18n="emptyTable">${window.hsI18n.t("emptyTable")}</span>
           </td>
         </tr>
@@ -568,30 +568,30 @@ class HealthSharkApp {
 
     tbody.innerHTML = expenses.map((e) => `
       <tr class="table-hover-row border-b border-gray-100 dark:border-slate-800 transition-colors">
-        <td class="py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">
+        <td class="py-4 px-5 text-sm font-bold text-gray-600 dark:text-gray-400 whitespace-nowrap">
           ${e.date}
         </td>
-        <td class="py-3 px-4">
-          <span class="px-2.5 py-1 rounded-md text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300">
+        <td class="py-4 px-5">
+          <span class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300">
             ${window.hsI18n.t(e.category) || e.category}
           </span>
         </td>
-        <td class="py-3 px-4 text-sm font-bold text-gray-800 dark:text-gray-200">
+        <td class="py-4 px-5 text-sm sm:text-base font-bold text-gray-800 dark:text-gray-200">
           ${e.title}
         </td>
-        <td class="py-3 px-4 text-xs text-gray-500 dark:text-gray-400">
+        <td class="py-4 px-5 text-sm text-gray-500 dark:text-gray-400">
           ${e.vendor || "-"}
         </td>
-        <td class="py-3 px-4 text-xs font-medium text-gray-600 dark:text-gray-400">
+        <td class="py-4 px-5 text-sm font-semibold text-gray-600 dark:text-gray-400">
           ${window.hsI18n.t(e.method) || e.method}
         </td>
-        <td class="py-3 px-4 text-sm font-extrabold text-red-600 dark:text-red-400">
+        <td class="py-4 px-5 text-base sm:text-lg font-black text-red-600 dark:text-red-400">
           ৳${Number(e.amount).toLocaleString()}
         </td>
-        <td class="py-3 px-4 text-right">
+        <td class="py-4 px-5 text-right">
           <button 
             onclick="window.hsApp.deleteExpensePrompt('${e.id}')"
-            class="w-7 h-7 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 flex items-center justify-center text-xs transition-colors ml-auto"
+            class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 flex items-center justify-center text-xs sm:text-sm transition-colors ml-auto"
           >
             <i class="fa-solid fa-trash-can"></i>
           </button>
@@ -616,8 +616,8 @@ class HealthSharkApp {
     if (sales.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" class="py-12 text-center text-gray-400 dark:text-gray-500 text-sm">
-            <i class="fa-solid fa-cash-register text-3xl mb-2 block opacity-40"></i>
+          <td colspan="7" class="py-16 text-center text-gray-400 dark:text-gray-500 text-sm">
+            <i class="fa-solid fa-cash-register text-4xl mb-3 block opacity-40"></i>
             <span data-i18n="emptyTable">${window.hsI18n.t("emptyTable")}</span>
           </td>
         </tr>
@@ -629,28 +629,28 @@ class HealthSharkApp {
       const netGain = (Number(s.total) || 0) - (Number(s.cost) || 0);
       return `
         <tr class="table-hover-row border-b border-gray-100 dark:border-slate-800 transition-colors">
-          <td class="py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">
+          <td class="py-4 px-5 text-sm font-bold text-gray-600 dark:text-gray-400 whitespace-nowrap">
             ${s.date}
           </td>
-          <td class="py-3 px-4 font-bold text-sm text-gray-800 dark:text-gray-200">
+          <td class="py-4 px-5 font-bold text-sm sm:text-base text-gray-800 dark:text-gray-200">
             ${s.item}
           </td>
-          <td class="py-3 px-4 text-xs font-extrabold text-gray-700 dark:text-gray-300">
+          <td class="py-4 px-5 text-sm font-black text-gray-700 dark:text-gray-300">
             ${s.quantity}
           </td>
-          <td class="py-3 px-4 text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
+          <td class="py-4 px-5 text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400">
             ৳${Number(s.total).toLocaleString()}
           </td>
-          <td class="py-3 px-4 text-xs text-gray-500">
+          <td class="py-4 px-5 text-sm text-gray-500">
             ${s.cost ? `৳${Number(s.cost).toLocaleString()}` : "-"}
           </td>
-          <td class="py-3 px-4 text-sm font-bold text-brand-700 dark:text-brand-300">
+          <td class="py-4 px-5 text-base font-black text-brand-700 dark:text-brand-300">
             ৳${netGain.toLocaleString()}
           </td>
-          <td class="py-3 px-4 text-right">
+          <td class="py-4 px-5 text-right">
             <button 
               onclick="window.hsApp.deleteSalePrompt('${s.id}')"
-              class="w-7 h-7 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 flex items-center justify-center text-xs transition-colors ml-auto"
+              class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 flex items-center justify-center text-xs sm:text-sm transition-colors ml-auto"
             >
               <i class="fa-solid fa-trash-can"></i>
             </button>
@@ -675,8 +675,8 @@ class HealthSharkApp {
     if (staff.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" class="py-12 text-center text-gray-400 dark:text-gray-500 text-sm">
-            <i class="fa-solid fa-user-group text-3xl mb-2 block opacity-40"></i>
+          <td colspan="7" class="py-16 text-center text-gray-400 dark:text-gray-500 text-sm">
+            <i class="fa-solid fa-user-group text-4xl mb-3 block opacity-40"></i>
             <span data-i18n="emptyTable">${window.hsI18n.t("emptyTable")}</span>
           </td>
         </tr>
@@ -691,39 +691,39 @@ class HealthSharkApp {
 
       return `
         <tr class="table-hover-row border-b border-gray-100 dark:border-slate-800 transition-colors">
-          <td class="py-3 px-4">
-            <div class="font-bold text-sm text-gray-900 dark:text-gray-100">${emp.name}</div>
+          <td class="py-4 px-5">
+            <div class="font-bold text-sm sm:text-base text-gray-900 dark:text-gray-100">${emp.name}</div>
           </td>
-          <td class="py-3 px-4 text-xs font-semibold text-brand-700 dark:text-brand-300">
+          <td class="py-4 px-5 text-sm font-bold text-brand-700 dark:text-brand-300">
             ${emp.role}
           </td>
-          <td class="py-3 px-4 text-xs font-medium text-gray-600 dark:text-gray-300">
+          <td class="py-4 px-5 text-sm font-medium text-gray-600 dark:text-gray-300">
             <a href="tel:${emp.phone}" class="hover:underline flex items-center gap-1.5">
-              <i class="fa-solid fa-phone text-[10px] text-gray-400"></i> ${emp.phone}
+              <i class="fa-solid fa-phone text-xs text-gray-400"></i> ${emp.phone}
             </a>
           </td>
-          <td class="py-3 px-4 text-sm font-extrabold text-gray-900 dark:text-gray-100">
+          <td class="py-4 px-5 text-base sm:text-lg font-black text-gray-900 dark:text-gray-100">
             ৳${Number(emp.salary).toLocaleString()}
           </td>
-          <td class="py-3 px-4 text-xs text-gray-500">
+          <td class="py-4 px-5 text-sm text-gray-500">
             ${emp.joinDate || "-"}
           </td>
-          <td class="py-3 px-4">
-            <span class="px-2.5 py-1 rounded-full text-xs font-bold ${statusColor}">
+          <td class="py-4 px-5">
+            <span class="px-3 py-1.5 rounded-full text-xs font-bold ${statusColor}">
               ${window.hsI18n.t(emp.status) || emp.status}
             </span>
           </td>
-          <td class="py-3 px-4 text-right">
-            <div class="inline-flex items-center gap-1.5">
+          <td class="py-4 px-5 text-right">
+            <div class="inline-flex items-center gap-2">
               <button 
                 onclick="window.hsApp.openEditEmployeeModal('${emp.id}')"
-                class="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 flex items-center justify-center text-xs transition-colors"
+                class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 flex items-center justify-center text-xs sm:text-sm transition-colors"
               >
                 <i class="fa-solid fa-pen-to-square"></i>
               </button>
               <button 
                 onclick="window.hsApp.deleteEmployeePrompt('${emp.id}')"
-                class="w-7 h-7 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 flex items-center justify-center text-xs transition-colors"
+                class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 flex items-center justify-center text-xs sm:text-sm transition-colors"
               >
                 <i class="fa-solid fa-trash-can"></i>
               </button>
