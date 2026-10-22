@@ -147,6 +147,32 @@
         </span>
       </button>
 
+      <!-- 6. Invoice / Cash Memo Generator -->
+      <button 
+        data-tab="invoice" 
+        class="nav-link group relative w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl font-extrabold text-sm transition-all duration-200 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-slate-800/80 text-left"
+        title="Invoice Generator"
+      >
+        <i class="fa-solid fa-file-invoice w-6 text-center text-lg text-rose-500 shrink-0"></i>
+        <span class="sidebar-label whitespace-nowrap" data-i18n="navInvoice">ইনভয়েস ও মেমো</span>
+        <span class="sidebar-tooltip hidden group-hover:block absolute left-full ml-3 px-3 py-1.5 bg-gray-900 text-white text-xs font-bold rounded-xl whitespace-nowrap shadow-xl z-50 pointer-events-none" data-i18n="navInvoice">
+          ইনভয়েস ও মেমো
+        </span>
+      </button>
+
+      <!-- 7. Calculator -->
+      <button 
+        data-tab="calculator" 
+        class="nav-link group relative w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl font-extrabold text-sm transition-all duration-200 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-slate-800/80 text-left"
+        title="Calculator"
+      >
+        <i class="fa-solid fa-calculator w-6 text-center text-lg text-amber-500 shrink-0"></i>
+        <span class="sidebar-label whitespace-nowrap" data-i18n="navCalculator">ক্যালকুলেটর</span>
+        <span class="sidebar-tooltip hidden group-hover:block absolute left-full ml-3 px-3 py-1.5 bg-gray-900 text-white text-xs font-bold rounded-xl whitespace-nowrap shadow-xl z-50 pointer-events-none" data-i18n="navCalculator">
+          ক্যালকুলেটর
+        </span>
+      </button>
+
       <!-- 6. Monthly Reports -->
       <button 
         data-tab="reports" 
@@ -752,7 +778,474 @@
     </div>
 
     <!-- ========================================================================= -->
-    <!-- TAB 6: MONTHLY REPORTS & IMPORT/EXPORT -->
+    <!-- TAB: INVOICE GENERATOR & CASH MEMO -->
+    <!-- ========================================================================= -->
+    <div id="tab-invoice" class="tab-pane space-y-6">
+      
+      <!-- Top Title Bar -->
+      <div class="bg-white dark:bg-[#122017] p-5 sm:p-7 rounded-3xl border border-gray-200/80 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 text-rose-700 dark:text-rose-300 text-xs font-bold mb-2">
+            <i class="fa-solid fa-receipt"></i> POS &amp; Billing System
+          </div>
+          <h2 class="font-heading font-black text-2xl sm:text-3xl text-gray-900 dark:text-gray-100" data-i18n="invoiceTitle">
+            ইনভয়েস ও ক্যাশ মেমো জেনারেটর
+          </h2>
+          <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1" data-i18n="invoiceSubtitle">
+            গ্রাহকের অর্ডারের রসিদ তৈরি, মুদ্রণ বা পিডিএফ ডাউনলোড করুন এবং চাইলে স্বয়ংক্রিয়ভাবে বিক্রিতে যুক্ত করুন
+          </p>
+        </div>
+        <div class="flex items-center gap-2.5">
+          <button 
+            type="button"
+            onclick="window.hsApp.clearInvoiceForm()" 
+            class="px-4 py-2.5 rounded-2xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 font-bold text-xs sm:text-sm transition-all flex items-center gap-2"
+          >
+            <i class="fa-solid fa-arrows-rotate"></i> <span data-i18n="invoiceResetForm">নতুন ফর্ম</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Layout: 2 Columns (Form on left, Summary on right) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left: Customer Details & Item Entry -->
+        <div class="lg:col-span-7 space-y-6">
+          
+          <!-- Customer & Order Meta Card -->
+          <div class="bg-white dark:bg-[#122017] p-5 sm:p-6 rounded-3xl border border-gray-200/80 dark:border-slate-800 shadow-sm space-y-4">
+            <h3 class="font-bold text-gray-900 dark:text-gray-100 text-base sm:text-lg flex items-center gap-2">
+              <i class="fa-solid fa-user-tag text-rose-500"></i> <span data-i18n="customerInfoHeading">গ্রাহকের বিবরণ</span>
+            </h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5" data-i18n="invoiceNumber">ইনভয়েস নং</label>
+                <input 
+                  type="text" 
+                  id="inv-number" 
+                  readonly 
+                  class="w-full px-4 py-2.5 rounded-2xl bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-gray-100 font-mono font-bold text-sm border border-gray-200 dark:border-slate-700 outline-none"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5" data-i18n="invoiceDate">তারিখ</label>
+                <input 
+                  type="date" 
+                  id="inv-date" 
+                  class="w-full px-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-slate-900/60 text-gray-800 dark:text-gray-100 font-semibold text-sm border border-gray-200 dark:border-slate-700 focus:ring-2 focus:ring-brand-500 outline-none transition"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5" data-i18n="orderType">অর্ডারের ধরন</label>
+                <select 
+                  id="inv-order-type" 
+                  class="w-full px-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-slate-900/60 text-gray-800 dark:text-gray-100 font-semibold text-sm border border-gray-200 dark:border-slate-700 focus:ring-2 focus:ring-brand-500 outline-none transition"
+                >
+                  <option value="Dine-in">Dine-in (রেস্তোরাঁয়)</option>
+                  <option value="Takeaway">Takeaway (পার্সেল)</option>
+                  <option value="Delivery">Home Delivery (ডেলিভারি)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5" data-i18n="customerName">গ্রাহকের নাম</label>
+                <input 
+                  type="text" 
+                  id="inv-customer-name" 
+                  placeholder="e.g. জনাব রহিম" 
+                  class="w-full px-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-slate-900/60 text-gray-800 dark:text-gray-100 font-medium text-sm border border-gray-200 dark:border-slate-700 focus:ring-2 focus:ring-brand-500 outline-none transition"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5" data-i18n="customerPhone">মোবাইল নম্বর</label>
+                <input 
+                  type="tel" 
+                  id="inv-customer-phone" 
+                  placeholder="e.g. 017xxxxxxxx" 
+                  class="w-full px-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-slate-900/60 text-gray-800 dark:text-gray-100 font-medium text-sm border border-gray-200 dark:border-slate-700 focus:ring-2 focus:ring-brand-500 outline-none transition"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5" data-i18n="customerAddress">ঠিকানা / টেবিল নং / ডেলিভারি লোকেশন</label>
+              <input 
+                type="text" 
+                id="inv-customer-address" 
+                placeholder="e.g. Table 4 / Gulshan, Dhaka" 
+                class="w-full px-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-slate-900/60 text-gray-800 dark:text-gray-100 font-medium text-sm border border-gray-200 dark:border-slate-700 focus:ring-2 focus:ring-brand-500 outline-none transition"
+              />
+            </div>
+          </div>
+
+          <!-- Add Item Row Card -->
+          <div class="bg-white dark:bg-[#122017] p-5 sm:p-6 rounded-3xl border border-gray-200/80 dark:border-slate-800 shadow-sm space-y-4">
+            <h3 class="font-bold text-gray-900 dark:text-gray-100 text-base sm:text-lg flex items-center gap-2">
+              <i class="fa-solid fa-cart-plus text-brand-600"></i> <span data-i18n="addItemHeading">খাবারের আইটেম নির্বাচন</span>
+            </h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+              <div class="sm:col-span-5">
+                <label class="block text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5" data-i18n="selectFoodItem">মেনু থেকে নির্বাচন</label>
+                <select 
+                  id="inv-item-select" 
+                  onchange="window.hsApp.onInvoiceItemSelectChange()"
+                  class="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-slate-900/60 text-gray-800 dark:text-gray-100 font-medium text-sm border border-gray-200 dark:border-slate-700 focus:ring-2 focus:ring-brand-500 outline-none"
+                >
+                  <option value="">-- আইটেম সিলেক্ট করুন --</option>
+                </select>
+              </div>
+
+              <div class="sm:col-span-3">
+                <label class="block text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5" data-i18n="itemCustomName">নাম (কাস্টম)</label>
+                <input 
+                  type="text" 
+                  id="inv-custom-name" 
+                  placeholder="খাবারের নাম" 
+                  class="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-slate-900/60 text-gray-800 dark:text-gray-100 font-medium text-sm border border-gray-200 dark:border-slate-700 focus:ring-2 focus:ring-brand-500 outline-none"
+                />
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5" data-i18n="itemPrice">মূল্য (৳)</label>
+                <input 
+                  type="number" 
+                  id="inv-item-price" 
+                  min="0" 
+                  step="0.01" 
+                  placeholder="0" 
+                  class="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-slate-900/60 text-gray-800 dark:text-gray-100 font-medium text-sm border border-gray-200 dark:border-slate-700 focus:ring-2 focus:ring-brand-500 outline-none"
+                />
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5" data-i18n="itemQuantity">পরিমাণ</label>
+                <div class="flex items-center gap-1.5">
+                  <input 
+                    type="number" 
+                    id="inv-item-qty" 
+                    value="1" 
+                    min="1" 
+                    step="1" 
+                    class="w-full px-3 py-2.5 rounded-2xl bg-gray-50 dark:bg-slate-900/60 text-gray-800 dark:text-gray-100 font-bold text-sm border border-gray-200 dark:border-slate-700 text-center outline-none"
+                  />
+                  <button 
+                    type="button" 
+                    onclick="window.hsApp.addInvoiceDraftItem()" 
+                    class="p-2.5 rounded-2xl bg-brand-700 hover:bg-brand-800 text-white font-bold transition shadow"
+                    title="Add Item"
+                  >
+                    <i class="fa-solid fa-plus"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Draft Line Items Table -->
+            <div class="border border-gray-200 dark:border-slate-800 rounded-2xl overflow-hidden mt-3">
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                  <thead>
+                    <tr class="bg-gray-50 dark:bg-slate-800/60 border-b border-gray-200 dark:border-slate-800 text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">
+                      <th class="py-3 px-3.5" data-i18n="invoiceColItem">আইটেম</th>
+                      <th class="py-3 px-3.5 text-right" data-i18n="invoiceColPrice">দর (৳)</th>
+                      <th class="py-3 px-3.5 text-center" data-i18n="invoiceColQty">পরিমাণ</th>
+                      <th class="py-3 px-3.5 text-right" data-i18n="invoiceColTotal">মোট (৳)</th>
+                      <th class="py-3 px-3.5 text-center" data-i18n="invoiceColAction">মুছুন</th>
+                    </tr>
+                  </thead>
+                  <tbody id="inv-draft-items-tbody" class="divide-y divide-gray-100 dark:divide-slate-800 font-medium">
+                    <!-- Dynamic line items -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Notes -->
+            <div>
+              <label class="block text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5" data-i18n="invoiceNotes">মন্তব্য / বিশেষ অনুরোধ</label>
+              <textarea 
+                id="inv-note" 
+                rows="2" 
+                placeholder="e.g. ঝাল কম, অতিরিক্ত স্যালাড দিন" 
+                class="w-full px-4 py-2 rounded-2xl bg-gray-50 dark:bg-slate-900/60 text-gray-800 dark:text-gray-100 font-medium text-xs sm:text-sm border border-gray-200 dark:border-slate-700 focus:ring-2 focus:ring-brand-500 outline-none"
+              ></textarea>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right: Calculations & Action Card -->
+        <div class="lg:col-span-5 space-y-6">
+          <div class="bg-white dark:bg-[#122017] p-5 sm:p-6 rounded-3xl border border-gray-200/80 dark:border-slate-800 shadow-sm space-y-4 sticky top-24">
+            <h3 class="font-bold text-gray-900 dark:text-gray-100 text-base sm:text-lg flex items-center justify-between">
+              <span class="flex items-center gap-2"><i class="fa-solid fa-calculator text-amber-500"></i> <span data-i18n="invoiceSummaryHeading">হিসাব বিবরণী</span></span>
+              <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 font-bold" id="inv-badge-mode">POS Memo</span>
+            </h3>
+
+            <div class="space-y-3 pt-2 text-sm">
+              <div class="flex justify-between items-center text-gray-600 dark:text-gray-300">
+                <span data-i18n="invSubtotal">মোট খাদ্য মূল্য (Subtotal):</span>
+                <span id="inv-subtotal-disp" class="font-bold font-mono text-gray-900 dark:text-gray-100">৳0.00</span>
+              </div>
+
+              <div class="flex justify-between items-center gap-3">
+                <label for="inv-discount" class="text-gray-600 dark:text-gray-300 shrink-0" data-i18n="invDiscount">ছাড় (Discount ৳):</label>
+                <input 
+                  type="number" 
+                  id="inv-discount" 
+                  value="0" 
+                  min="0" 
+                  class="w-28 px-3 py-1.5 rounded-xl bg-gray-50 dark:bg-slate-900/60 text-right font-mono font-bold text-sm border border-gray-200 dark:border-slate-700 outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+
+              <div class="flex justify-between items-center gap-3">
+                <label for="inv-delivery" class="text-gray-600 dark:text-gray-300 shrink-0" data-i18n="invDeliveryFee">ডেলিভারি চার্জ (৳):</label>
+                <input 
+                  type="number" 
+                  id="inv-delivery" 
+                  value="0" 
+                  min="0" 
+                  class="w-28 px-3 py-1.5 rounded-xl bg-gray-50 dark:bg-slate-900/60 text-right font-mono font-bold text-sm border border-gray-200 dark:border-slate-700 outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+
+              <div class="border-t border-gray-200 dark:border-slate-800 pt-3 flex justify-between items-center">
+                <span class="font-extrabold text-base text-gray-900 dark:text-gray-100" data-i18n="invGrandTotal">সর্বমোট (Grand Total):</span>
+                <span id="inv-grand-total-disp" class="font-black text-2xl font-heading text-brand-700 dark:text-brand-400">৳0.00</span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1" data-i18n="invPaidAmount">পরিশোধ (৳)</label>
+                  <input 
+                    type="number" 
+                    id="inv-paid" 
+                    value="0" 
+                    min="0" 
+                    class="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-slate-900/60 text-right font-mono font-bold text-base text-emerald-600 dark:text-emerald-400 border border-gray-200 dark:border-slate-700 outline-none focus:ring-2 focus:ring-brand-500"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1" data-i18n="invDueAmount">বকেয়া (৳)</label>
+                  <input 
+                    type="text" 
+                    id="inv-due-disp" 
+                    readonly 
+                    value="৳0.00" 
+                    class="w-full px-3 py-2 rounded-xl bg-gray-100 dark:bg-slate-800 text-right font-mono font-bold text-base text-rose-600 dark:text-rose-400 border border-gray-200 dark:border-slate-700 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1" data-i18n="invPaymentMethod">পেমেন্ট মেথড</label>
+                <select 
+                  id="inv-payment-method" 
+                  class="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-slate-900/60 text-gray-800 dark:text-gray-200 font-medium text-sm border border-gray-200 dark:border-slate-700 outline-none"
+                >
+                  <option value="Cash">Cash (নগদ)</option>
+                  <option value="bKash">bKash (বিকাশ)</option>
+                  <option value="Nagad">Nagad (নগদ)</option>
+                  <option value="Card">Bank / Card</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <!-- Checkbox: Auto-record to Sales -->
+              <div class="pt-2">
+                <label class="flex items-center gap-2.5 p-3 rounded-2xl bg-brand-50/60 dark:bg-brand-950/30 border border-brand-200 dark:border-brand-900/40 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    id="inv-sync-sales" 
+                    checked 
+                    class="w-4 h-4 rounded text-brand-600 focus:ring-brand-500"
+                  />
+                  <span class="text-xs font-bold text-brand-900 dark:text-brand-300" data-i18n="invSyncSalesCheckbox">
+                    এই বিক্রির হিসাব স্বয়ংক্রিয়ভাবে সেলস রেজিস্টারে যুক্ত করুন
+                  </span>
+                </label>
+              </div>
+
+              <!-- Print / Save Buttons -->
+              <div class="pt-3 space-y-2.5">
+                <button 
+                  type="button" 
+                  onclick="window.hsApp.handleCreateInvoice(true)"
+                  class="w-full py-3.5 px-4 rounded-2xl bg-brand-700 hover:bg-brand-800 text-white font-heading font-extrabold text-sm sm:text-base transition shadow-lg flex items-center justify-center gap-2"
+                >
+                  <i class="fa-solid fa-print"></i> <span data-i18n="btnSaveAndPrintInvoice">সংরক্ষণ ও মেমো প্রিন্ট করুন</span>
+                </button>
+                <button 
+                  type="button" 
+                  onclick="window.hsApp.handleCreateInvoice(false)"
+                  class="w-full py-2.5 px-4 rounded-2xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-800 dark:text-gray-200 font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2"
+                >
+                  <i class="fa-solid fa-floppy-disk"></i> <span data-i18n="btnSaveOnlyInvoice">শুধু সংরক্ষণ করুন</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Past Invoices History Table -->
+      <div class="bg-white dark:bg-[#122017] rounded-3xl border border-gray-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div class="p-5 sm:p-6 border-b border-gray-200 dark:border-slate-800 flex items-center justify-between">
+          <h3 class="font-heading font-black text-lg sm:text-xl text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <i class="fa-solid fa-receipt text-rose-500"></i> <span data-i18n="invoicesHistoryTitle">সাম্প্রতিক ইনভয়েস ও মেমো তালিকা</span>
+          </h3>
+          <span id="inv-count-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300">0 টি ইনভয়েস</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-50/80 dark:bg-slate-800/60 border-b border-gray-200 dark:border-slate-800 text-xs sm:text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th class="py-4 px-5" data-i18n="thInvNumber">ইনভয়েস নং</th>
+                <th class="py-4 px-5" data-i18n="thInvDate">তারিখ</th>
+                <th class="py-4 px-5" data-i18n="thInvCustomer">গ্রাহক</th>
+                <th class="py-4 px-5" data-i18n="thInvItems">আইটেম সংখ্যা</th>
+                <th class="py-4 px-5" data-i18n="thInvTotal">মোট টাকা (৳)</th>
+                <th class="py-4 px-5" data-i18n="thInvPaid">পরিশোধ</th>
+                <th class="py-4 px-5" data-i18n="thInvDue">বকেয়া</th>
+                <th class="py-4 px-5 text-right" data-i18n="thInvAction">অ্যাকশন</th>
+              </tr>
+            </thead>
+            <tbody id="invoices-history-tbody" class="divide-y divide-gray-100 dark:divide-slate-800 text-sm">
+              <!-- Dynamic rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB: SMART CALCULATOR & TAPE -->
+    <!-- ========================================================================= -->
+    <div id="tab-calculator" class="tab-pane space-y-6">
+      
+      <!-- Top Title Bar -->
+      <div class="bg-white dark:bg-[#122017] p-5 sm:p-7 rounded-3xl border border-gray-200/80 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/40 text-amber-700 dark:text-amber-300 text-xs font-bold mb-2">
+            <i class="fa-solid fa-calculator"></i> Business Utility
+          </div>
+          <h2 class="font-heading font-black text-2xl sm:text-3xl text-gray-900 dark:text-gray-100" data-i18n="calcTitle">
+            হিসাব ক্যালকুলেটর
+          </h2>
+          <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1" data-i18n="calcSubtitle">
+            দৈনন্দিন হিসাব-নিকাশ, যোগ-বিয়োগের নির্ভুল ক্যালকুলেটর (কীবোর্ড সাপোর্ট ও হিস্ট্রি টেপ সহ)
+          </p>
+        </div>
+        
+        <!-- Formula slot notice badge -->
+        <div class="px-4 py-2 rounded-2xl bg-gray-50 dark:bg-slate-800/80 border border-gray-200 dark:border-slate-700 text-xs text-gray-500 dark:text-gray-400 max-w-sm">
+          <i class="fa-solid fa-circle-info text-amber-500 mr-1"></i>
+          <span data-i18n="calcCustomNotice">ভবিষ্যতে আপনার রেস্তোরাঁ কস্টিং ও প্রফিট মার্জিনের বিশেষ ফর্মুলা এখানে যুক্ত হবে।</span>
+        </div>
+      </div>
+
+      <!-- Main Layout: 2 Columns (Calculator Keypad on left, History Tape on right) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-5xl mx-auto">
+        
+        <!-- Calculator Unit -->
+        <div class="lg:col-span-7 bg-white dark:bg-[#122017] p-5 sm:p-7 rounded-3xl border border-gray-200/80 dark:border-slate-800 shadow-lg space-y-5">
+          
+          <!-- Screen Display -->
+          <div class="bg-slate-900 text-white p-5 rounded-2xl shadow-inner border border-slate-800 text-right space-y-1">
+            <div id="calc-display-expression" class="font-mono text-xs sm:text-sm text-gray-400 h-5 overflow-hidden text-ellipsis whitespace-nowrap">
+              0
+            </div>
+            <div id="calc-display-current" class="font-heading font-black text-3xl sm:text-4xl text-amber-400 tracking-wider overflow-x-auto whitespace-nowrap scrollbar-none">
+              0
+            </div>
+          </div>
+
+          <!-- Buttons Grid -->
+          <div class="grid grid-cols-4 gap-2.5 sm:gap-3 text-lg font-bold">
+            <!-- Row 1 -->
+            <button onclick="window.hsApp.calcClear()" class="p-3.5 sm:p-4 rounded-2xl bg-rose-100 hover:bg-rose-200 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 font-extrabold transition">C</button>
+            <button onclick="window.hsApp.calcClearEntry()" class="p-3.5 sm:p-4 rounded-2xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 transition">CE</button>
+            <button onclick="window.hsApp.calcBackspace()" class="p-3.5 sm:p-4 rounded-2xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 transition" title="Backspace"><i class="fa-solid fa-delete-left"></i></button>
+            <button onclick="window.hsApp.calcHandleOperator('/')" class="p-3.5 sm:p-4 rounded-2xl bg-brand-100 hover:bg-brand-200 dark:bg-brand-950/60 dark:hover:bg-brand-900/60 text-brand-800 dark:text-brand-300 font-extrabold transition">÷</button>
+
+            <!-- Row 2 -->
+            <button onclick="window.hsApp.calcInputDigit('7')" class="p-3.5 sm:p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 dark:bg-slate-800/60 dark:hover:bg-slate-700 text-gray-900 dark:text-gray-100 transition shadow-sm">7</button>
+            <button onclick="window.hsApp.calcInputDigit('8')" class="p-3.5 sm:p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 dark:bg-slate-800/60 dark:hover:bg-slate-700 text-gray-900 dark:text-gray-100 transition shadow-sm">8</button>
+            <button onclick="window.hsApp.calcInputDigit('9')" class="p-3.5 sm:p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 dark:bg-slate-800/60 dark:hover:bg-slate-700 text-gray-900 dark:text-gray-100 transition shadow-sm">9</button>
+            <button onclick="window.hsApp.calcHandleOperator('*')" class="p-3.5 sm:p-4 rounded-2xl bg-brand-100 hover:bg-brand-200 dark:bg-brand-950/60 dark:hover:bg-brand-900/60 text-brand-800 dark:text-brand-300 font-extrabold transition">×</button>
+
+            <!-- Row 3 -->
+            <button onclick="window.hsApp.calcInputDigit('4')" class="p-3.5 sm:p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 dark:bg-slate-800/60 dark:hover:bg-slate-700 text-gray-900 dark:text-gray-100 transition shadow-sm">4</button>
+            <button onclick="window.hsApp.calcInputDigit('5')" class="p-3.5 sm:p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 dark:bg-slate-800/60 dark:hover:bg-slate-700 text-gray-900 dark:text-gray-100 transition shadow-sm">5</button>
+            <button onclick="window.hsApp.calcInputDigit('6')" class="p-3.5 sm:p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 dark:bg-slate-800/60 dark:hover:bg-slate-700 text-gray-900 dark:text-gray-100 transition shadow-sm">6</button>
+            <button onclick="window.hsApp.calcHandleOperator('-')" class="p-3.5 sm:p-4 rounded-2xl bg-brand-100 hover:bg-brand-200 dark:bg-brand-950/60 dark:hover:bg-brand-900/60 text-brand-800 dark:text-brand-300 font-extrabold transition">−</button>
+
+            <!-- Row 4 -->
+            <button onclick="window.hsApp.calcInputDigit('1')" class="p-3.5 sm:p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 dark:bg-slate-800/60 dark:hover:bg-slate-700 text-gray-900 dark:text-gray-100 transition shadow-sm">1</button>
+            <button onclick="window.hsApp.calcInputDigit('2')" class="p-3.5 sm:p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 dark:bg-slate-800/60 dark:hover:bg-slate-700 text-gray-900 dark:text-gray-100 transition shadow-sm">2</button>
+            <button onclick="window.hsApp.calcInputDigit('3')" class="p-3.5 sm:p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 dark:bg-slate-800/60 dark:hover:bg-slate-700 text-gray-900 dark:text-gray-100 transition shadow-sm">3</button>
+            <button onclick="window.hsApp.calcHandleOperator('+')" class="p-3.5 sm:p-4 rounded-2xl bg-brand-100 hover:bg-brand-200 dark:bg-brand-950/60 dark:hover:bg-brand-900/60 text-brand-800 dark:text-brand-300 font-extrabold transition">+</button>
+
+            <!-- Row 5 -->
+            <button onclick="window.hsApp.calcPercentage()" class="p-3.5 sm:p-4 rounded-2xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 transition">%</button>
+            <button onclick="window.hsApp.calcInputDigit('0')" class="p-3.5 sm:p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 dark:bg-slate-800/60 dark:hover:bg-slate-700 text-gray-900 dark:text-gray-100 transition shadow-sm">0</button>
+            <button onclick="window.hsApp.calcInputDecimal()" class="p-3.5 sm:p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 dark:bg-slate-800/60 dark:hover:bg-slate-700 text-gray-900 dark:text-gray-100 font-black transition">.</button>
+            <button onclick="window.hsApp.calcCalculate()" class="p-3.5 sm:p-4 rounded-2xl bg-brand-700 hover:bg-brand-800 text-white font-black text-xl transition shadow-lg">=</button>
+          </div>
+
+          <div class="text-center pt-2">
+            <span class="text-xs text-gray-400 dark:text-gray-500">
+              <i class="fa-solid fa-keyboard mr-1"></i> কীবোর্ডের 0-9, +, -, *, /, Enter, Backspace কাজ করে
+            </span>
+          </div>
+
+        </div>
+
+        <!-- History Tape -->
+        <div class="lg:col-span-5 bg-white dark:bg-[#122017] p-5 sm:p-6 rounded-3xl border border-gray-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between space-y-4">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-slate-800">
+              <h3 class="font-bold text-gray-900 dark:text-gray-100 text-sm sm:text-base flex items-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left text-brand-600"></i> <span data-i18n="calcHistoryTapeTitle">হিস্ট্রি ও ক্যালকুলেশন মেমোরি</span>
+              </h3>
+              <button 
+                onclick="window.hsApp.calcClearHistoryTape()" 
+                class="text-xs text-rose-500 hover:text-rose-600 font-bold transition flex items-center gap-1"
+                title="Clear tape"
+              >
+                <i class="fa-solid fa-trash-can"></i> <span data-i18n="calcClearTape">মুছুন</span>
+              </button>
+            </div>
+
+            <!-- Tape List -->
+            <div id="calc-history-list" class="space-y-2 mt-3 max-h-[360px] overflow-y-auto pr-1">
+              <!-- Dynamic tape items -->
+            </div>
+          </div>
+
+          <div class="p-3 rounded-2xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200/60 dark:border-slate-700/60 text-xs text-gray-500 dark:text-gray-400">
+            <p class="leading-relaxed">
+              <i class="fa-solid fa-lightbulb text-amber-500 mr-1"></i>
+              যেকোনো পূর্ববর্তী ফলাফলের ওপর ক্লিক করলে সংখ্যাটি সরাসরি ক্যালকুলেটরে চলে আসবে।
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 8: MONTHLY REPORTS & IMPORT/EXPORT -->
     <!-- ========================================================================= -->
     <div id="tab-reports" class="tab-pane space-y-6">
       

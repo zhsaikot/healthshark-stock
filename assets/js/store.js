@@ -11,6 +11,7 @@ class DataStore {
       expenses: [],
       sales: [],
       employees: [],
+      invoices: [],
       activityLog: []
     };
     this.currentMonth = new Date().getMonth(); // 0 to 11
@@ -24,8 +25,10 @@ class DataStore {
       const stored = localStorage.getItem(this.storageKey);
       if (stored) {
         this.data = JSON.parse(stored);
+        this.data.invoices = this.data.invoices || [];
       } else if (typeof SEED_DATA !== "undefined") {
         this.data = JSON.parse(JSON.stringify(SEED_DATA));
+        this.data.invoices = this.data.invoices || [];
         this.save();
       }
     } catch (e) {
@@ -288,6 +291,56 @@ class DataStore {
     };
   }
 
+  // --- INVOICE MANAGEMENT ---
+  getInvoices() {
+    this.data.invoices = this.data.invoices || [];
+    return this.data.invoices;
+  }
+
+  getNextInvoiceNumber() {
+    this.data.invoices = this.data.invoices || [];
+    const count = this.data.invoices.length + 1;
+    return `HS-INV-${String(count).padStart(4, "0")}`;
+  }
+
+  addInvoice(invoice) {
+    this.data.invoices = this.data.invoices || [];
+    const newInvoice = {
+      id: "inv_" + Date.now(),
+      invoiceNumber: invoice.invoiceNumber || this.getNextInvoiceNumber(),
+      customerName: invoice.customerName || "Walking Customer",
+      customerPhone: invoice.customerPhone || "",
+      orderType: invoice.orderType || "Dine-in",
+      date: invoice.date || new Date().toISOString().split("T")[0],
+      items: invoice.items || [],
+      subtotal: Number(invoice.subtotal) || 0,
+      discount: Number(invoice.discount) || 0,
+      deliveryFee: Number(invoice.deliveryFee) || 0,
+      grandTotal: Number(invoice.grandTotal) || 0,
+      paidAmount: Number(invoice.paidAmount) || 0,
+      dueAmount: Number(invoice.dueAmount) || 0,
+      paymentMethod: invoice.paymentMethod || "Cash",
+      note: invoice.note || "",
+      createdAt: new Date().toISOString()
+    };
+    this.data.invoices.unshift(newInvoice);
+    this.addActivity(`New Invoice ${newInvoice.invoiceNumber} created (৳${newInvoice.grandTotal})`, "success");
+    this.save();
+    return newInvoice;
+  }
+
+  deleteInvoice(id) {
+    this.data.invoices = this.data.invoices || [];
+    const idx = this.data.invoices.findIndex((inv) => inv.id === id);
+    if (idx !== -1) {
+      const removed = this.data.invoices.splice(idx, 1)[0];
+      this.addActivity(`Invoice ${removed.invoiceNumber} deleted`, "warning");
+      this.save();
+      return true;
+    }
+    return false;
+  }
+
   // --- BACKUP & RESTORE ---
   exportDatabase() {
     return JSON.stringify(this.data, null, 2);
@@ -304,6 +357,7 @@ class DataStore {
         expenses: parsed.expenses || [],
         sales: parsed.sales || [],
         employees: parsed.employees || [],
+        invoices: parsed.invoices || [],
         activityLog: parsed.activityLog || []
       };
       this.save();

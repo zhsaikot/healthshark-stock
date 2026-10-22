@@ -12,6 +12,16 @@ class HealthSharkApp {
     this.stockFilterType = "all";
     this.stockFilterCategory = "all";
     this.stockSearchQuery = "";
+
+    // Invoice Draft & State
+    this.invoiceDraftItems = [];
+
+    // Calculator State
+    this.calcCurrentValue = "0";
+    this.calcPreviousValue = null;
+    this.calcOperator = null;
+    this.calcWaitingForSecondOperand = false;
+    this.calcHistoryTape = [];
   }
 
   async init() {
@@ -266,6 +276,12 @@ class HealthSharkApp {
         break;
       case "employees":
         this.renderEmployeesTable();
+        break;
+      case "invoice":
+        this.renderInvoiceTab();
+        break;
+      case "calculator":
+        this.renderCalculatorTab();
         break;
       case "reports":
         this.renderReportsTab();
@@ -879,6 +895,466 @@ class HealthSharkApp {
     `;
   }
 
+  // --- TAB 7: INVOICE GENERATOR ---
+  renderInvoiceTab() {
+    const invNoInput = document.getElementById("inv-number");
+    const invDateInput = document.getElementById("inv-date");
+    if (invNoInput && !invNoInput.value) {
+      invNoInput.value = window.hsStore.getNextInvoiceNumber();
+    }
+    if (invDateInput && !invDateInput.value) {
+      invDateInput.value = new Date().toISOString().split("T")[0];
+    }
+
+    // Populate Item Selector Dropdown
+    const itemSelect = document.getElementById("inv-item-select");
+    if (itemSelect) {
+      const items = window.hsStore.getItems();
+      let optHtml = `<option value="">-- ${window.hsI18n.t("invoiceItemSelect")} --</option>`;
+      items.forEach((item) => {
+        const price = item.sellingPrice || item.costPrice || 0;
+        optHtml += `<option value="${item.id}" data-name="${item.name}" data-price="${price}" data-unit="${item.unit || ""}">
+          ${item.name} (Tk. ${price})
+        </option>`;
+      });
+      itemSelect.innerHTML = optHtml;
+    }
+
+    this.renderInvoiceDraftItems();
+    this.renderInvoicesHistoryTable();
+  }
+
+  onInvoiceItemSelectChange() {
+    const select = document.getElementById("inv-item-select");
+    const priceInput = document.getElementById("inv-item-price");
+    const customNameInput = document.getElementById("inv-custom-name");
+    if (!select || !priceInput) return;
+
+    const opt = select.selectedOptions[0];
+    if (opt && opt.value) {
+      const price = opt.getAttribute("data-price") || 0;
+      priceInput.value = price;
+      if (customNameInput) customNameInput.value = "";
+    }
+  }
+
+  addInvoiceDraftItem() {
+    const select = document.getElementById("inv-item-select");
+    const customNameInput = document.getElementById("inv-custom-name");
+    const qtyInput = document.getElementById("inv-item-qty");
+    const priceInput = document.getElementById("inv-item-price");
+
+    let name = "";
+    let unit = "";
+    const selectedOpt = select ? select.selectedOptions[0] : null;
+
+    if (customNameInput && customNameInput.value.trim()) {
+      name = customNameInput.value.trim();
+    } else if (selectedOpt && selectedOpt.value) {
+      name = selectedOpt.getAttribute("data-name");
+      unit = selectedOpt.getAttribute("data-unit") || "";
+    }
+
+    if (!name) {
+      this.showToast("Please select an item or enter a custom name", "warning");
+      return;
+    }
+
+    const qty = Math.max(1, Number(qtyInput ? qtyInput.value : 1) || 1);
+    const price = Math.max(0, Number(priceInput ? priceInput.value : 0) || 0);
+
+    this.invoiceDraftItems.push({
+      name,
+      qty,
+      price,
+      unit
+    });
+
+    if (customNameInput) customNameInput.value = "";
+    if (select) select.value = "";
+    if (qtyInput) qtyInput.value = "1";
+    if (priceInput) priceInput.value = "";
+
+    this.renderInvoiceDraftItems();
+    this.calculateInvoiceTotals();
+  }
+
+  removeInvoiceDraftItem(index) {
+    if (index >= 0 && index < this.invoiceDraftItems.length) {
+      this.invoiceDraftItems.splice(index, 1);
+      this.renderInvoiceDraftItems();
+      this.calculateInvoiceTotals();
+    }
+  }
+
+  renderInvoiceDraftItems() {
+    const tbody = document.getElementById("inv-draft-items-tbody");
+    if (!tbody) return;
+
+    if (this.invoiceDraftItems.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="py-6 text-center text-xs text-gray-400 dark:text-gray-500 font-medium">
+            No items added yet. Choose a menu item above and click "Add Item".
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = this.invoiceDraftItems
+      .map(
+        (item, idx) => `
+      <tr class="border-b border-gray-100 dark:border-slate-800/80 text-xs sm:text-sm">
+        <td class="py-3 px-3 text-gray-400 font-bold">${idx + 1}</td>
+        <td class="py-3 px-3 font-bold text-gray-800 dark:text-gray-100">${item.name}</td>
+        <td class="py-3 px-3 text-center font-bold text-gray-700 dark:text-gray-300">${item.qty} ${item.unit || ""}</td>
+        <td class="py-3 px-3 text-right font-bold text-gray-700 dark:text-gray-300">৳${Number(item.price).toLocaleString()}</td>
+        <td class="py-3 px-3 text-right font-black text-brand-700 dark:text-brand-400">৳${(item.qty * item.price).toLocaleString()}</td>
+        <td class="py-3 px-2 text-center">
+          <button onclick="window.hsApp.removeInvoiceDraftItem(${idx})" class="w-7 h-7 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center justify-center transition-colors">
+            <i class="fa-solid fa-trash-can text-xs"></i>
+          </button>
+        </td>
+      </tr>
+    `
+      )
+      .join("");
+  }
+
+  calculateInvoiceTotals() {
+    const subtotal = this.invoiceDraftItems.reduce((sum, item) => sum + item.qty * item.price, 0);
+    const discountInput = document.getElementById("inv-discount");
+    const deliveryInput = document.getElementById("inv-delivery");
+    const paidInput = document.getElementById("inv-paid");
+
+    const discount = Math.max(0, Number(discountInput ? discountInput.value : 0) || 0);
+    const delivery = Math.max(0, Number(deliveryInput ? deliveryInput.value : 0) || 0);
+    const grandTotal = Math.max(0, subtotal - discount + delivery);
+    const paid = Math.max(0, Number(paidInput ? paidInput.value : 0) || 0);
+    const due = Math.max(0, grandTotal - paid);
+
+    const subtotalEl = document.getElementById("inv-subtotal-disp");
+    const grandTotalEl = document.getElementById("inv-grand-total-disp");
+    const dueEl = document.getElementById("inv-due-disp");
+
+    if (subtotalEl) subtotalEl.textContent = `৳${subtotal.toLocaleString()}`;
+    if (grandTotalEl) grandTotalEl.textContent = `৳${grandTotal.toLocaleString()}`;
+    if (dueEl) dueEl.textContent = `৳${due.toLocaleString()}`;
+  }
+
+  handleCreateInvoice(autoSaveToSales = false) {
+    if (this.invoiceDraftItems.length === 0) {
+      this.showToast("Please add at least one item to the invoice", "warning");
+      return;
+    }
+
+    const invNumber = document.getElementById("inv-number").value.trim() || window.hsStore.getNextInvoiceNumber();
+    const customerName = document.getElementById("inv-customer-name").value.trim() || "Walking Customer";
+    const customerPhone = document.getElementById("inv-customer-phone").value.trim();
+    const orderType = document.getElementById("inv-order-type").value || "Dine-in";
+    const date = document.getElementById("inv-date").value || new Date().toISOString().split("T")[0];
+    const paymentMethod = document.getElementById("inv-payment-method").value || "Cash";
+    const note = document.getElementById("inv-note").value.trim();
+
+    const subtotal = this.invoiceDraftItems.reduce((sum, item) => sum + item.qty * item.price, 0);
+    const discount = Math.max(0, Number(document.getElementById("inv-discount").value) || 0);
+    const deliveryFee = Math.max(0, Number(document.getElementById("inv-delivery").value) || 0);
+    const grandTotal = Math.max(0, subtotal - discount + deliveryFee);
+    const paidAmount = Math.max(0, Number(document.getElementById("inv-paid").value) || 0);
+    const dueAmount = Math.max(0, grandTotal - paidAmount);
+
+    const newInvoice = window.hsStore.addInvoice({
+      invoiceNumber: invNumber,
+      customerName,
+      customerPhone,
+      orderType,
+      date,
+      items: [...this.invoiceDraftItems],
+      subtotal,
+      discount,
+      deliveryFee,
+      grandTotal,
+      paidAmount,
+      dueAmount,
+      paymentMethod,
+      note
+    });
+
+    if (autoSaveToSales && grandTotal > 0) {
+      window.hsStore.addSale({
+        date,
+        itemId: null,
+        itemName: `Invoice ${newInvoice.invoiceNumber} (${customerName})`,
+        quantity: 1,
+        sellingPrice: grandTotal,
+        totalAmount: grandTotal,
+        paymentMethod,
+        note: `Customer: ${customerName} | Phone: ${customerPhone || "N/A"}`
+      });
+      this.showToast("Invoice created & recorded into Sales!", "success");
+    } else {
+      this.showToast("Invoice created successfully!", "success");
+    }
+
+    // Trigger Print Window
+    window.hsReports.printInvoiceReceipt(newInvoice);
+
+    // Reset Form & Update History
+    this.clearInvoiceForm();
+    this.renderInvoicesHistoryTable();
+  }
+
+  clearInvoiceForm() {
+    this.invoiceDraftItems = [];
+    document.getElementById("inv-number").value = window.hsStore.getNextInvoiceNumber();
+    document.getElementById("inv-customer-name").value = "";
+    document.getElementById("inv-customer-phone").value = "";
+    document.getElementById("inv-custom-name").value = "";
+    document.getElementById("inv-item-qty").value = "1";
+    document.getElementById("inv-item-price").value = "";
+    document.getElementById("inv-discount").value = "0";
+    document.getElementById("inv-delivery").value = "0";
+    document.getElementById("inv-paid").value = "0";
+    document.getElementById("inv-note").value = "";
+    this.renderInvoiceDraftItems();
+    this.calculateInvoiceTotals();
+  }
+
+  renderInvoicesHistoryTable() {
+    const tbody = document.getElementById("invoices-history-tbody");
+    if (!tbody) return;
+
+    const invoices = window.hsStore.getInvoices();
+    if (invoices.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="py-8 text-center text-xs sm:text-sm text-gray-400 dark:text-gray-500 font-medium">
+            No invoices generated yet. Create customer bills above to build invoice history.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = invoices
+      .map(
+        (inv) => `
+      <tr class="border-b border-gray-100 dark:border-slate-800/80 hover:bg-gray-50 dark:hover:bg-slate-800/40 text-xs sm:text-sm transition-colors">
+        <td class="py-3 px-3 font-heading font-extrabold text-brand-700 dark:text-brand-400">${inv.invoiceNumber}</td>
+        <td class="py-3 px-3 text-gray-500 dark:text-gray-400">${inv.date}</td>
+        <td class="py-3 px-3 font-bold text-gray-900 dark:text-gray-100">
+          ${inv.customerName}
+          ${inv.customerPhone ? `<span class="block text-[11px] font-normal text-gray-400">${inv.customerPhone}</span>` : ""}
+        </td>
+        <td class="py-3 px-3">
+          <span class="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300">
+            ${inv.orderType || "Dine-in"}
+          </span>
+        </td>
+        <td class="py-3 px-3 text-right font-black text-gray-900 dark:text-gray-100">৳${Number(inv.grandTotal).toLocaleString()}</td>
+        <td class="py-3 px-3 text-center">
+          <span class="px-2 py-0.5 rounded-full text-[11px] font-bold ${inv.dueAmount > 0 ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"}">
+            ${inv.dueAmount > 0 ? "Due: ৳" + inv.dueAmount.toLocaleString() : "Paid"}
+          </span>
+        </td>
+        <td class="py-3 px-3 text-right space-x-1">
+          <button onclick="window.hsApp.reprintInvoice('${inv.id}')" title="Print Invoice" class="px-2.5 py-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 dark:bg-brand-950 dark:hover:bg-brand-900 text-brand-700 dark:text-brand-300 font-bold text-xs transition-colors">
+            <i class="fa-solid fa-print"></i>
+          </button>
+          <button onclick="window.hsApp.deleteInvoiceRecord('${inv.id}')" title="Delete Invoice" class="px-2.5 py-1.5 rounded-xl bg-gray-100 hover:bg-rose-100 dark:bg-slate-800 dark:hover:bg-rose-950 text-gray-500 hover:text-rose-600 font-bold text-xs transition-colors">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </td>
+      </tr>
+    `
+      )
+      .join("");
+  }
+
+  reprintInvoice(id) {
+    const invoices = window.hsStore.getInvoices();
+    const inv = invoices.find((i) => i.id === id);
+    if (inv) {
+      window.hsReports.printInvoiceReceipt(inv);
+    }
+  }
+
+  deleteInvoiceRecord(id) {
+    if (confirm(window.hsI18n.t("confirmDelete"))) {
+      window.hsStore.deleteInvoice(id);
+      this.renderInvoicesHistoryTable();
+      this.showToast("Invoice deleted", "info");
+    }
+  }
+
+  // --- TAB 8: CALCULATOR ---
+  renderCalculatorTab() {
+    this.calcUpdateDisplay();
+    this.renderCalcHistoryTape();
+  }
+
+  calcInputDigit(digit) {
+    if (this.calcWaitingForSecondOperand) {
+      this.calcCurrentValue = String(digit);
+      this.calcWaitingForSecondOperand = false;
+    } else {
+      this.calcCurrentValue = this.calcCurrentValue === "0" ? String(digit) : this.calcCurrentValue + digit;
+    }
+    this.calcUpdateDisplay();
+  }
+
+  calcInputDecimal() {
+    if (this.calcWaitingForSecondOperand) {
+      this.calcCurrentValue = "0.";
+      this.calcWaitingForSecondOperand = false;
+    } else if (!this.calcCurrentValue.includes(".")) {
+      this.calcCurrentValue += ".";
+    }
+    this.calcUpdateDisplay();
+  }
+
+  calcHandleOperator(nextOp) {
+    const inputValue = parseFloat(this.calcCurrentValue);
+
+    if (this.calcOperator && this.calcWaitingForSecondOperand) {
+      this.calcOperator = nextOp;
+      this.calcUpdateDisplay();
+      return;
+    }
+
+    if (this.calcPreviousValue === null && !isNaN(inputValue)) {
+      this.calcPreviousValue = inputValue;
+    } else if (this.calcOperator) {
+      const result = this.calcPerformCalculation(this.calcOperator, this.calcPreviousValue, inputValue);
+      this.calcCurrentValue = String(result);
+      this.calcPreviousValue = result;
+    }
+
+    this.calcWaitingForSecondOperand = true;
+    this.calcOperator = nextOp;
+    this.calcUpdateDisplay();
+  }
+
+  calcPerformCalculation(op, first, second) {
+    switch (op) {
+      case "+": return first + second;
+      case "-": return first - second;
+      case "*": return first * second;
+      case "/": return second !== 0 ? first / second : 0;
+      default: return second;
+    }
+  }
+
+  calcCalculate() {
+    if (this.calcOperator === null || this.calcWaitingForSecondOperand) return;
+
+    const first = this.calcPreviousValue;
+    const second = parseFloat(this.calcCurrentValue);
+    const op = this.calcOperator;
+    const result = this.calcPerformCalculation(op, first, second);
+
+    const opSymbol = op === "*" ? "×" : op === "/" ? "÷" : op === "-" ? "−" : "+";
+    this.calcHistoryTape.unshift({
+      expression: `${first} ${opSymbol} ${second} =`,
+      result: Number(result.toFixed(4)).toString()
+    });
+
+    this.calcCurrentValue = Number(result.toFixed(4)).toString();
+    this.calcPreviousValue = null;
+    this.calcOperator = null;
+    this.calcWaitingForSecondOperand = false;
+
+    this.calcUpdateDisplay();
+    this.renderCalcHistoryTape();
+  }
+
+  calcClear() {
+    this.calcCurrentValue = "0";
+    this.calcPreviousValue = null;
+    this.calcOperator = null;
+    this.calcWaitingForSecondOperand = false;
+    this.calcUpdateDisplay();
+  }
+
+  calcClearEntry() {
+    this.calcCurrentValue = "0";
+    this.calcUpdateDisplay();
+  }
+
+  calcBackspace() {
+    if (this.calcWaitingForSecondOperand) return;
+    if (this.calcCurrentValue.length > 1) {
+      this.calcCurrentValue = this.calcCurrentValue.slice(0, -1);
+    } else {
+      this.calcCurrentValue = "0";
+    }
+    this.calcUpdateDisplay();
+  }
+
+  calcPercentage() {
+    const val = parseFloat(this.calcCurrentValue);
+    if (!isNaN(val)) {
+      this.calcCurrentValue = String(val / 100);
+      this.calcUpdateDisplay();
+    }
+  }
+
+  calcRecallHistory(resultVal) {
+    this.calcCurrentValue = String(resultVal);
+    this.calcWaitingForSecondOperand = false;
+    this.calcUpdateDisplay();
+  }
+
+  calcClearHistoryTape() {
+    this.calcHistoryTape = [];
+    this.renderCalcHistoryTape();
+  }
+
+  calcUpdateDisplay() {
+    const currentEl = document.getElementById("calc-display-current");
+    const expEl = document.getElementById("calc-display-expression");
+
+    if (currentEl) {
+      currentEl.textContent = this.calcCurrentValue;
+    }
+
+    if (expEl) {
+      if (this.calcOperator && this.calcPreviousValue !== null) {
+        const opSymbol = this.calcOperator === "*" ? "×" : this.calcOperator === "/" ? "÷" : this.calcOperator === "-" ? "−" : "+";
+        expEl.textContent = `${this.calcPreviousValue} ${opSymbol}`;
+      } else {
+        expEl.textContent = "";
+      }
+    }
+  }
+
+  renderCalcHistoryTape() {
+    const tapeContainer = document.getElementById("calc-history-list");
+    if (!tapeContainer) return;
+
+    if (this.calcHistoryTape.length === 0) {
+      tapeContainer.innerHTML = `
+        <div class="py-8 text-center text-xs text-gray-400 dark:text-gray-500 font-medium">
+          No recent calculations. Key in numbers to see tape history.
+        </div>
+      `;
+      return;
+    }
+
+    tapeContainer.innerHTML = this.calcHistoryTape
+      .slice(0, 15)
+      .map(
+        (h) => `
+      <div onclick="window.hsApp.calcRecallHistory('${h.result}')" class="p-2.5 rounded-xl bg-gray-50 dark:bg-slate-800/60 hover:bg-brand-50 dark:hover:bg-brand-950/40 border border-gray-100 dark:border-slate-800 cursor-pointer transition-colors text-right">
+        <div class="text-[11px] font-semibold text-gray-400 dark:text-gray-500">${h.expression}</div>
+        <div class="text-base font-black font-heading text-brand-700 dark:text-brand-400">${h.result}</div>
+      </div>
+    `
+      )
+      .join("");
+  }
+
   // --- MODAL CONTROLLERS ---
   openModal(modalId) {
     const modal = document.getElementById(modalId);
@@ -1044,7 +1520,9 @@ class HealthSharkApp {
   saveSaleForm(e) {
     e.preventDefault();
     const date = document.getElementById("sale-date").value;
-    const item = document.getElementById("sale-food-select").value || document.getElementById("sale-item-custom").value.trim();
+    const foodSelect = document.getElementById("sale-food-select");
+    const customItem = document.getElementById("sale-item-custom");
+    const item = (foodSelect ? foodSelect.value : "") || (customItem ? customItem.value.trim() : "");
     const quantity = Number(document.getElementById("sale-qty").value) || 1;
     const total = Number(document.getElementById("sale-total").value) || 0;
     const cost = Number(document.getElementById("sale-cost").value) || 0;
@@ -1353,6 +1831,39 @@ class HealthSharkApp {
 
     const exportPeriod = document.getElementById("export-period");
     if (exportPeriod) exportPeriod.addEventListener("change", () => this.updateExportPeriodVisibility());
+
+    // Invoice Generator Dynamic Listeners
+    const invItemSelect = document.getElementById("inv-item-select");
+    if (invItemSelect) invItemSelect.addEventListener("change", () => this.onInvoiceItemSelectChange());
+
+    const invDiscountInput = document.getElementById("inv-discount");
+    const invDeliveryInput = document.getElementById("inv-delivery");
+    const invPaidInput = document.getElementById("inv-paid");
+
+    if (invDiscountInput) invDiscountInput.addEventListener("input", () => this.calculateInvoiceTotals());
+    if (invDeliveryInput) invDeliveryInput.addEventListener("input", () => this.calculateInvoiceTotals());
+    if (invPaidInput) invPaidInput.addEventListener("input", () => this.calculateInvoiceTotals());
+
+    // Physical Keyboard Listener for Interactive Calculator
+    window.addEventListener("keydown", (e) => {
+      if (this.currentTab !== "calculator") return;
+      if (["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement.tagName)) return;
+
+      if (e.key >= "0" && e.key <= "9") {
+        this.calcInputDigit(e.key);
+      } else if (e.key === ".") {
+        this.calcInputDecimal();
+      } else if (e.key === "+" || e.key === "-" || e.key === "*" || e.key === "/") {
+        this.calcHandleOperator(e.key);
+      } else if (e.key === "Enter" || e.key === "=") {
+        e.preventDefault();
+        this.calcCalculate();
+      } else if (e.key === "Backspace") {
+        this.calcBackspace();
+      } else if (e.key === "Escape") {
+        this.calcClear();
+      }
+    });
   }
 }
 

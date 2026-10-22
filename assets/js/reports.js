@@ -758,6 +758,130 @@ class ReportsEngine {
     reader.readAsText(file);
   }
 
+  printInvoiceReceipt(inv) {
+    const printWindow = window.open("", "_blank", "width=700,height=800");
+    if (!printWindow) {
+      alert("Please allow popups to print invoices.");
+      return;
+    }
+
+    const itemsHtml = (inv.items || [])
+      .map(
+        (item, idx) => `
+      <tr>
+        <td style="padding: 8px 6px; border-bottom: 1px dashed #cbd5e1; font-size: 13px;">${idx + 1}</td>
+        <td style="padding: 8px 6px; border-bottom: 1px dashed #cbd5e1; font-size: 13px; font-weight: bold;">${item.name}</td>
+        <td style="padding: 8px 6px; border-bottom: 1px dashed #cbd5e1; font-size: 13px; text-align: center;">${item.qty} ${item.unit || ""}</td>
+        <td style="padding: 8px 6px; border-bottom: 1px dashed #cbd5e1; font-size: 13px; text-align: right;">Tk. ${Number(item.price).toLocaleString()}</td>
+        <td style="padding: 8px 6px; border-bottom: 1px dashed #cbd5e1; font-size: 13px; text-align: right; font-weight: bold;">Tk. ${(item.qty * item.price).toLocaleString()}</td>
+      </tr>
+    `
+      )
+      .join("");
+
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Invoice - ${inv.invoiceNumber}</title>
+  <style>
+    @page { size: auto; margin: 15mm; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; margin: 0; padding: 20px; }
+    .invoice-card { max-width: 550px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .header { text-align: center; border-bottom: 2px solid #15803d; padding-bottom: 16px; margin-bottom: 16px; }
+    .brand-title { font-size: 26px; font-weight: 900; color: #14532d; margin: 0; }
+    .brand-sub { font-size: 12px; color: #15803d; font-weight: 700; text-transform: uppercase; margin-top: 2px; }
+    .brand-contact { font-size: 12px; color: #64748b; margin-top: 4px; }
+    .meta-grid { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 16px; line-height: 1.6; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+    th { background: #f8fafc; color: #475569; font-size: 12px; font-weight: 800; padding: 8px 6px; text-align: left; border-bottom: 2px solid #cbd5e1; }
+    .totals-box { margin-left: auto; width: 240px; font-size: 13px; line-height: 1.8; }
+    .totals-row { display: flex; justify-content: space-between; }
+    .grand-total { font-size: 16px; font-weight: 900; color: #15803d; border-top: 2px solid #15803d; padding-top: 6px; margin-top: 6px; }
+    .footer { text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px dashed #cbd5e1; padding-top: 14px; margin-top: 20px; }
+    @media print {
+      body { padding: 0; }
+      .invoice-card { border: none; box-shadow: none; padding: 0; max-width: 100%; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="no-print" style="text-align: center; margin-bottom: 16px;">
+    <button onclick="window.print()" style="background: #15803d; color: white; border: none; padding: 10px 24px; font-size: 14px; font-weight: bold; border-radius: 8px; cursor: pointer;">
+      🖨️ Print / Save PDF
+    </button>
+  </div>
+  <div class="invoice-card">
+    <div class="header">
+      <h1 class="brand-title">HEALTH SHARK</h1>
+      <div class="brand-sub">Fresh & Healthy Cloud Kitchen</div>
+      <div class="brand-contact">Mirpur, Dhaka • Hotline: 01789-474381</div>
+    </div>
+    <div class="meta-grid">
+      <div>
+        <strong>Invoice No:</strong> ${inv.invoiceNumber}<br />
+        <strong>Date:</strong> ${inv.date}<br />
+        <strong>Order Type:</strong> ${inv.orderType || "Dine-in"}
+      </div>
+      <div style="text-align: right;">
+        <strong>Customer:</strong> ${inv.customerName || "Walking Customer"}<br />
+        <strong>Phone:</strong> ${inv.customerPhone || "N/A"}<br />
+        <strong>Payment:</strong> ${inv.paymentMethod || "Cash"}
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 25px;">#</th>
+          <th>Item</th>
+          <th style="text-align: center;">Qty</th>
+          <th style="text-align: right;">Rate</th>
+          <th style="text-align: right;">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${itemsHtml || '<tr><td colspan="5" style="text-align:center; padding:12px;">No items</td></tr>'}
+      </tbody>
+    </table>
+    <div class="totals-box">
+      <div class="totals-row">
+        <span>Subtotal:</span>
+        <strong>Tk. ${Number(inv.subtotal).toLocaleString()}</strong>
+      </div>
+      ${inv.discount > 0 ? `<div class="totals-row" style="color: #dc2626;"><span>Discount:</span><strong>- Tk. ${Number(inv.discount).toLocaleString()}</strong></div>` : ""}
+      ${inv.deliveryFee > 0 ? `<div class="totals-row"><span>Delivery Fee:</span><strong>+ Tk. ${Number(inv.deliveryFee).toLocaleString()}</strong></div>` : ""}
+      <div class="totals-row grand-total">
+        <span>Grand Total:</span>
+        <span>Tk. ${Number(inv.grandTotal).toLocaleString()}</span>
+      </div>
+      <div class="totals-row" style="font-size: 12px; margin-top: 4px;">
+        <span>Paid Amount:</span>
+        <span>Tk. ${Number(inv.paidAmount).toLocaleString()}</span>
+      </div>
+      ${inv.dueAmount > 0 ? `<div class="totals-row" style="color: #dc2626; font-size: 12px; font-weight: bold;"><span>Due Amount:</span><span>Tk. ${Number(inv.dueAmount).toLocaleString()}</span></div>` : ""}
+    </div>
+    ${inv.note ? `<div style="font-size: 12px; color: #64748b; margin-top: 14px; font-style: italic;"><strong>Note:</strong> ${inv.note}</div>` : ""}
+    <div class="footer">
+      Thank you for choosing Health Shark! Eat Healthy, Live Strong.<br />
+      Software: healthshark-stock | Powered by Health Shark
+    </div>
+  </div>
+  <script>
+    window.onload = function() {
+      setTimeout(function() { window.print(); }, 400);
+    };
+  <\/script>
+</body>
+</html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  }
+
   downloadFile(content, fileName, mimeType) {
     const blob = new Blob(["\uFEFF" + content], { type: mimeType });
     const url = URL.createObjectURL(blob);

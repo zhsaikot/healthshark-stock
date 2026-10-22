@@ -17,6 +17,8 @@ const translations = {
     navExpenses: "Costing & Expenses",
     navIncome: "Income & Profit",
     navEmployees: "Employees",
+    navInvoice: "Invoice Generator",
+    navCalculator: "Calculator",
     navReports: "Monthly Reports",
 
     // Filter Bar
@@ -236,6 +238,44 @@ const translations = {
       "July", "August", "September", "October", "November", "December"
     ],
 
+    // Invoice Generator Tab
+    invoiceGenTitle: "POS Invoice & Cash Memo Generator",
+    invoiceGenSub: "Generate customer bills, cash memos, and print receipts instantly",
+    invoiceDetails: "Customer & Order Details",
+    invoiceNo: "Invoice #",
+    customerName: "Customer Name",
+    customerPhone: "Phone Number",
+    orderType: "Order Type",
+    typeDineIn: "Dine-in",
+    typeTakeaway: "Takeaway",
+    typeDelivery: "Home Delivery",
+    invoiceItemSelect: "Select Menu / Stock Item",
+    invoiceCustomItem: "Or Custom Food Item Name",
+    invoiceItemQty: "Quantity",
+    invoiceItemPrice: "Price / Rate (Tk.)",
+    btnAddInvoiceItem: "Add Item",
+    invoiceItemsList: "Billed Items",
+    invoiceSubtotal: "Subtotal",
+    invoiceDiscount: "Discount (Tk.)",
+    invoiceDeliveryCharge: "Delivery Fee (Tk.)",
+    invoiceGrandTotal: "Grand Total",
+    invoicePaid: "Paid Amount",
+    invoiceDue: "Due Amount",
+    invoicePaymentMethod: "Payment Method",
+    invoiceNote: "Order Notes",
+    btnPrintInvoice: "Print / PDF Receipt",
+    btnSaveInvoiceToSales: "Save to Sales Ledger",
+    btnClearInvoice: "New / Clear Invoice",
+    recentInvoicesTitle: "Recent Invoices & Cash Memos",
+    recentInvoicesSub: "Archived customer receipts saved in local storage",
+
+    // Calculator Tab
+    calculatorTitle: "Interactive Business Calculator",
+    calculatorSub: "Quick operational arithmetic & business margin calculation",
+    calcHistory: "Calculation History",
+    calcClearHistory: "Clear Tape",
+    calcCustomNotice: "Custom Business Formula Slot: Send your custom formula rules to plug in specialized food costing recipes here anytime.",
+
     // Toasts & Messages
     toastItemSaved: "Item saved successfully!",
     toastItemDeleted: "Item deleted.",
@@ -265,6 +305,8 @@ const translations = {
     navExpenses: "খরচ ও ব্যয়",
     navIncome: "বিক্রি ও লাভ",
     navEmployees: "কর্মচারীবৃন্দ",
+    navInvoice: "ইনভয়েস ও মেমো",
+    navCalculator: "ক্যালকুলেটর",
     navReports: "মাসিক রিপোর্ট",
 
     // Filter Bar
@@ -483,6 +525,44 @@ const translations = {
       "জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন",
       "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"
     ],
+
+    // Invoice Generator Tab
+    invoiceGenTitle: "কাস্টমার ইনভয়েস ও ক্যাশ মেমো",
+    invoiceGenSub: "সহজে গ্রাহকের বিল তৈরি, মেমো প্রিন্ট ও পিডিএফ ডাউনলোড করুন",
+    invoiceDetails: "গ্রাহক ও অর্ডারের তথ্য",
+    invoiceNo: "ইনভয়েস নং",
+    customerName: "গ্রাহকের নাম",
+    customerPhone: "মোবাইল নম্বর",
+    orderType: "অর্ডার টাইপ",
+    typeDineIn: "ডাইন-ইন (দোকানে খাওয়া)",
+    typeTakeaway: "পার্সেল / টেকঅ্যাওয়ে",
+    typeDelivery: "হোম ডেলিভারি",
+    invoiceItemSelect: "খাবার / মেনু আইটেম নির্বাচন",
+    invoiceCustomItem: "অথবা কাস্টম খাবারের নাম",
+    invoiceItemQty: "পরিমাণ",
+    invoiceItemPrice: "মূল্য / দর (৳)",
+    btnAddInvoiceItem: "বিলে যুক্ত করুন",
+    invoiceItemsList: "যুক্ত করা খাবারের তালিকা",
+    invoiceSubtotal: "সাবটোটাল",
+    invoiceDiscount: "ছাড় / ডিসকাউন্ট (৳)",
+    invoiceDeliveryCharge: "ডেলিভারি চার্জ (৳)",
+    invoiceGrandTotal: "সর্বমোট বিল",
+    invoicePaid: "জমা / পরিশোধ",
+    invoiceDue: "বাকি টাকা",
+    invoicePaymentMethod: "পরিশোধের মাধ্যম",
+    invoiceNote: "বিশেষ নোট / মন্তব্য",
+    btnPrintInvoice: "প্রিন্ট / মেমো ডাউনলোড",
+    btnSaveInvoiceToSales: "বিক্রি হিসেবে জমা করুন",
+    btnClearInvoice: "নতুন ইনভয়েস / ক্লিয়ার",
+    recentInvoicesTitle: "সাম্প্রতিক ইনভয়েস ও রসিদ",
+    recentInvoicesSub: "পূর্বে তৈরি করা ক্যাশ মেমোর তালিকা ও হিস্টোরি",
+
+    // Calculator Tab
+    calculatorTitle: "হিসাব ক্যালকুলেটর",
+    calculatorSub: "দৈনন্দিন যোগ-বিয়োগ ও হিসাব নিকাশের স্মার্ট ক্যালকুলেটর",
+    calcHistory: "পূর্ববর্তী হিসাবের হিস্টোরি",
+    calcClearHistory: "হিস্টোরি মুছুন",
+    calcCustomNotice: "কাস্টম ফর্মুলা স্লট: পরবর্তীতে আপনার ব্যবসার কস্টিং বা লাভ-ক্ষতির স্পেশাল ফর্মুলা দিলে তা এখানে যুক্ত করে দেওয়া হবে।",
 
     // Toasts & Messages
     toastItemSaved: "পণ্যটি সফলভাবে সংরক্ষিত হয়েছে!",
