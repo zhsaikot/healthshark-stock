@@ -939,8 +939,10 @@ class HealthSharkApp {
       items.forEach((item) => {
         const price = item.sellingPrice || item.costPrice || 0;
         const cost = item.costPrice || 0;
-        optHtml += `<option value="${item.id}" data-name="${item.name}" data-price="${price}" data-cost="${cost}" data-unit="${item.unit || ""}">
-          ${item.name} (Tk. ${price})
+        const unit = window.hsI18n.t(item.unit) || item.unit || "";
+        const stockLabel = window.hsI18n.getLang() === "bn" ? "স্টক" : "Stock";
+        optHtml += `<option value="${item.id}" data-name="${item.name}" data-price="${price}" data-cost="${cost}" data-unit="${item.unit || ""}" data-stock="${item.quantity}">
+          ${item.name} (৳${price}) [${stockLabel}: ${item.quantity} ${unit}]
         </option>`;
       });
       itemSelect.innerHTML = optHtml;
@@ -971,6 +973,7 @@ class HealthSharkApp {
     const qtyInput = document.getElementById("inv-item-qty");
     const priceInput = document.getElementById("inv-item-price");
 
+    let itemId = null;
     let name = "";
     let unit = "";
     let costPrice = 0;
@@ -978,7 +981,16 @@ class HealthSharkApp {
 
     if (customNameInput && customNameInput.value.trim()) {
       name = customNameInput.value.trim();
+      const matched = window.hsStore.getItems().find(
+        (i) => i.name.trim().toLowerCase() === name.toLowerCase()
+      );
+      if (matched) {
+        itemId = matched.id;
+        unit = unit || matched.unit;
+        costPrice = costPrice || matched.costPrice;
+      }
     } else if (selectedOpt && selectedOpt.value) {
+      itemId = selectedOpt.value;
       name = selectedOpt.getAttribute("data-name");
       unit = selectedOpt.getAttribute("data-unit") || "";
       costPrice = Number(selectedOpt.getAttribute("data-cost")) || 0;
@@ -993,6 +1005,7 @@ class HealthSharkApp {
     const price = Math.max(0, Number(priceInput ? priceInput.value : 0) || 0);
 
     this.invoiceDraftItems.push({
+      itemId,
       name,
       qty,
       price,
@@ -1108,6 +1121,7 @@ class HealthSharkApp {
 
     // Draft items
     this.invoiceDraftItems = (inv.items || []).map((item) => ({
+      itemId: item.itemId || null,
       name: item.name,
       qty: item.qty,
       price: item.price,

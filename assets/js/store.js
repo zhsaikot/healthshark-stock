@@ -266,6 +266,30 @@ class DataStore {
   }
 
   saveSale(sale) {
+    // If this is a direct/manual sale (not from an invoice), adjust stock for the sold item
+    if (!sale.invoiceId && sale.item) {
+      const stockItem = this.findItemByReference(null, sale.item);
+      if (stockItem) {
+        const qty = Number(sale.quantity) || 0;
+        if (!sale.id) {
+          // New manual sale: deduct stock
+          stockItem.quantity = Math.max(0, Math.round(((Number(stockItem.quantity) || 0) - qty) * 100) / 100);
+          stockItem.updatedAt = new Date().toISOString().split("T")[0];
+          this.addActivity(`Stock Out (-${qty} ${stockItem.unit || ""}) for ${stockItem.name} (Direct Sale)`, "stock");
+        } else {
+          // Edit manual sale: adjust delta
+          const oldSale = this.getSaleById(sale.id);
+          const oldQty = oldSale ? (Number(oldSale.quantity) || 0) : 0;
+          const delta = qty - oldQty;
+          if (delta !== 0) {
+            stockItem.quantity = Math.max(0, Math.round(((Number(stockItem.quantity) || 0) - delta) * 100) / 100);
+            stockItem.updatedAt = new Date().toISOString().split("T")[0];
+            this.addActivity(`Stock Adjusted (${delta > 0 ? `-${delta}` : `+${Math.abs(delta)}`} ${stockItem.unit || ""}) for ${stockItem.name} (Direct Sale Edit)`, "stock");
+          }
+        }
+      }
+    }
+
     if (!sale.id) {
       sale.id = "sale-" + Date.now();
       this.data.sales.push(sale);
@@ -289,6 +313,16 @@ class DataStore {
   }
 
   deleteSale(id) {
+    const sale = this.getSaleById(id);
+    if (sale && !sale.invoiceId && sale.item) {
+      const stockItem = this.findItemByReference(null, sale.item);
+      if (stockItem) {
+        const qty = Number(sale.quantity) || 0;
+        stockItem.quantity = Math.round(((Number(stockItem.quantity) || 0) + qty) * 100) / 100;
+        stockItem.updatedAt = new Date().toISOString().split("T")[0];
+        this.addActivity(`Stock Restored (+${qty} ${stockItem.unit || ""}) for ${stockItem.name} (Sale Deleted)`, "stock");
+      }
+    }
     this.data.sales = this.data.sales.filter((s) => s.id !== id);
     this.save();
   }
@@ -427,6 +461,58 @@ class DataStore {
     return `HS-INV-${String(count).padStart(4, "0")}`;
   }
 
+  findItemByReference(itemId, name) {
+    if (itemId) {
+      const item = this.getItemById(itemId);
+      if (item) return item;
+    }
+    if (name) {
+      const clean = name.trim().toLowerCase();
+      return (this.data.items || []).find(
+        (i) => i.name.trim().toLowerCase() === clean
+      );
+    }
+    return null;
+  }
+
+  deductInvoiceStock(invoice) {
+    if (!invoice || !Array.isArray(invoice.items)) return;
+    invoice.items.forEach((item) => {
+      const stockItem = this.findItemByReference(item.itemId, item.name);
+      if (stockItem) {
+        const qty = Number(item.qty) || 0;
+        if (qty > 0) {
+          const oldQty = Number(stockItem.quantity) || 0;
+          stockItem.quantity = Math.max(0, Math.round((oldQty - qty) * 100) / 100);
+          stockItem.updatedAt = new Date().toISOString().split("T")[0];
+          this.addActivity(
+            `Stock Out (-${qty} ${stockItem.unit || ""}) for ${stockItem.name} (Invoice #${invoice.invoiceNumber})`,
+            "stock"
+          );
+        }
+      }
+    });
+  }
+
+  restoreInvoiceStock(invoice) {
+    if (!invoice || !Array.isArray(invoice.items)) return;
+    invoice.items.forEach((item) => {
+      const stockItem = this.findItemByReference(item.itemId, item.name);
+      if (stockItem) {
+        const qty = Number(item.qty) || 0;
+        if (qty > 0) {
+          const oldQty = Number(stockItem.quantity) || 0;
+          stockItem.quantity = Math.round((oldQty + qty) * 100) / 100;
+          stockItem.updatedAt = new Date().toISOString().split("T")[0];
+          this.addActivity(
+            `Stock Restored (+${qty} ${stockItem.unit || ""}) for ${stockItem.name} (Invoice #${invoice.invoiceNumber})`,
+            "stock"
+          );
+        }
+      }
+    });
+  }
+
   addInvoice(invoice) {
     this.data.invoices = this.data.invoices || [];
     const newInvoice = {
@@ -448,6 +534,7 @@ class DataStore {
       createdAt: new Date().toISOString()
     };
     this.data.invoices.unshift(newInvoice);
+    this.deductInvoiceStock(newInvoice);
     this.addActivity(`New Invoice ${newInvoice.invoiceNumber} created (৳${newInvoice.grandTotal})`, "success");
     this.save();
     return newInvoice;
@@ -464,11 +551,23 @@ class DataStore {
     if (idx === -1) return null;
 
     const existing = this.data.invoices[idx];
+
+    // If items are modified, revert old stock first
+    if (updatedFields.items) {
+      this.restoreInvoiceStock(existing);
+    }
+
     const updated = {
       ...existing,
       ...updatedFields,
       updatedAt: new Date().toISOString()
     };
+
+    // Deduct new items stock
+    if (updatedFields.items) {
+      this.deductInvoiceStock(updated);
+    }
+
     this.data.invoices[idx] = updated;
     this.addActivity(`Updated Invoice ${updated.invoiceNumber} (৳${updated.grandTotal})`, "info");
     this.save();
@@ -505,7 +604,13 @@ class DataStore {
     const idx = this.data.invoices.findIndex((inv) => inv.id === id);
     if (idx !== -1) {
       const removed = this.data.invoices.splice(idx, 1)[0];
-      this.addActivity(`Invoice ${removed.invoiceNumber} deleted`, "warning");
+      // 1. Restore stock for the deleted invoice
+      this.restoreInvoiceStock(removed);
+      // 2. Remove linked sales record if any
+      this.data.sales = (this.data.sales || []).filter(
+        (s) => s.invoiceId !== id && s.invoiceNumber !== removed.invoiceNumber
+      );
+      this.addActivity(`Invoice ${removed.invoiceNumber} deleted and stock restored`, "warning");
       this.save();
       return true;
     }
