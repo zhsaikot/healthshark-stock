@@ -921,6 +921,7 @@ class HealthSharkApp {
     }
 
     this.renderInvoiceDraftItems();
+    this.calculateInvoiceTotals();
     this.renderInvoicesHistoryTable();
   }
 
@@ -1040,7 +1041,17 @@ class HealthSharkApp {
 
     if (subtotalEl) subtotalEl.textContent = `৳${subtotal.toLocaleString()}`;
     if (grandTotalEl) grandTotalEl.textContent = `৳${grandTotal.toLocaleString()}`;
-    if (dueEl) dueEl.textContent = `৳${due.toLocaleString()}`;
+    if (dueEl) {
+      dueEl.value = `৳${due.toLocaleString()}`;
+      dueEl.textContent = `৳${due.toLocaleString()}`;
+      if (due > 0) {
+        dueEl.classList.remove("text-emerald-600", "dark:text-emerald-400");
+        dueEl.classList.add("text-rose-600", "dark:text-rose-400");
+      } else {
+        dueEl.classList.remove("text-rose-600", "dark:text-rose-400");
+        dueEl.classList.add("text-emerald-600", "dark:text-emerald-400");
+      }
+    }
   }
 
   handleCreateInvoice(autoSaveToSales = false) {
