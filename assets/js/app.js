@@ -322,6 +322,11 @@ class HealthSharkApp {
     }
     if (elProfitMargin) {
       elProfitMargin.textContent = `${fin.profitMargin}%`;
+      if (fin.netProfit >= 0) {
+        elProfitMargin.className = "px-2 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 shrink-0";
+      } else {
+        elProfitMargin.className = "px-2 py-0.5 rounded-full text-[11px] font-black bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 shrink-0";
+      }
     }
   }
 

@@ -576,6 +576,10 @@ class I18nManager {
 
   formatCurrency(amount) {
     const num = Number(amount) || 0;
+    if (num < 0) {
+      const formatted = Math.abs(num).toLocaleString("en-BD", { maximumFractionDigits: 0 });
+      return `-৳${formatted}`;
+    }
     const formatted = num.toLocaleString("en-BD", { maximumFractionDigits: 0 });
     return `৳${formatted}`;
   }
