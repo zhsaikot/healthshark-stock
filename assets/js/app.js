@@ -1845,12 +1845,34 @@ class HealthSharkApp {
   // Sale Modal
   populateSaleFoodSelect(selectedItemName = "") {
     const foodSelect = document.getElementById("sale-food-select");
-    if (foodSelect) {
-      const items = window.hsStore.getItems({ type: "typeFinished" });
-      foodSelect.innerHTML = items
-        .map((i) => `<option value="${i.name}" data-price="${i.sellingPrice}" data-cost="${i.costPrice}" ${i.name === selectedItemName ? "selected" : ""}>${i.name} (৳${i.sellingPrice})</option>`)
-        .join("");
+    if (!foodSelect) return;
+
+    const items = window.hsStore.getItems();
+    const isBn = window.hsI18n.getLang() === "bn";
+    const stockLabel = isBn ? "স্টক" : "Stock";
+
+    const hasCurrentItem = items.some((i) => i.name === selectedItemName);
+
+    let html = `<option value="">-- ${isBn ? "পণ্য বা খাবার নির্বাচন করুন" : "Select Product / Food"} --</option>`;
+
+    // If editing a sale whose item name isn't directly in stock items (e.g. custom or invoice title), keep it visible
+    if (selectedItemName && !hasCurrentItem) {
+      html += `<option value="${selectedItemName}" selected>${selectedItemName}</option>`;
     }
+
+    html += items
+      .map((i) => {
+        const price = i.sellingPrice || i.costPrice || 0;
+        const cost = i.costPrice || 0;
+        const unit = window.hsI18n.t(i.unit) || i.unit || "";
+        const isSelected = i.name === selectedItemName ? "selected" : "";
+        return `<option value="${i.name}" data-price="${price}" data-cost="${cost}" ${isSelected}>
+          ${i.name} (৳${price}) [${stockLabel}: ${i.quantity} ${unit}]
+        </option>`;
+      })
+      .join("");
+
+    foodSelect.innerHTML = html;
   }
 
   openAddSaleModal() {
@@ -1877,14 +1899,6 @@ class HealthSharkApp {
 
     this.populateSaleFoodSelect(sale.item);
 
-    const foodSelect = document.getElementById("sale-food-select");
-    const customItem = document.getElementById("sale-item-custom");
-    if (foodSelect && foodSelect.value === sale.item) {
-      if (customItem) customItem.value = "";
-    } else {
-      if (customItem) customItem.value = sale.item;
-    }
-
     document.getElementById("sale-qty").value = sale.quantity;
     document.getElementById("sale-total").value = sale.total;
     document.getElementById("sale-cost").value = sale.cost || "";
@@ -1898,8 +1912,7 @@ class HealthSharkApp {
     const id = document.getElementById("sale-id").value;
     const date = document.getElementById("sale-date").value;
     const foodSelect = document.getElementById("sale-food-select");
-    const customItem = document.getElementById("sale-item-custom");
-    const item = (customItem && customItem.value.trim()) || (foodSelect ? foodSelect.value : "");
+    const item = foodSelect ? foodSelect.value : "";
     const quantity = Number(document.getElementById("sale-qty").value) || 1;
     const total = Number(document.getElementById("sale-total").value) || 0;
     const cost = Number(document.getElementById("sale-cost").value) || 0;
